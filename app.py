@@ -4,7 +4,7 @@ import json
 import os
 import hashlib
 import base64
-from PIL import Image
+from PIL import Image # Módulo Image da Pillow é importado
 import io
 import datetime
 import requests
@@ -22,29 +22,28 @@ st.set_page_config(
 def load_data():
     if os.path.exists("links_data.json"):
         try:
-            with open("links_data.json", "r", encoding="utf-8") as f: # Especifica encoding
+            with open("links_data.json", "r", encoding="utf-8") as f:
                 return json.load(f)
-        except json.JSONDecodeError: # Se o JSON estiver corrompido, cria um novo
-            pass # Cai para o bloco 'else' abaixo para criar um novo arquivo
+        except json.JSONDecodeError:
+            pass
 
-    # Se o arquivo não existe ou está corrompido, cria um com dados padrão
     default_data = {
         "profile": {
             "name": "Seu Nome",
             "description": "Professor e Desenvolvedor",
             "image": None
         },
-        "password": hashlib.sha256("admin123".encode()).hexdigest(),  # senha padrão: admin123
+        "password": hashlib.sha256("admin123".encode()).hexdigest(),
         "links": []
     }
-    with open("links_data.json", "w", encoding="utf-8") as f: # Especifica encoding
-        json.dump(default_data, f, ensure_ascii=False, indent=4) # Adiciona ensure_ascii e indent para melhor formatação
+    with open("links_data.json", "w", encoding="utf-8") as f:
+        json.dump(default_data, f, ensure_ascii=False, indent=4)
     return default_data
 
 # Função para salvar dados
 def save_data(data):
-    with open("links_data.json", "w", encoding="utf-8") as f: # Especifica encoding
-        json.dump(data, f, ensure_ascii=False, indent=4) # Adiciona ensure_ascii e indent
+    with open("links_data.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # Carregar CSS personalizado
 def local_css():
@@ -66,11 +65,11 @@ def local_css():
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
     }
-    .profile-pic {
+    .profile-pic { /* CSS para a foto de perfil, garantindo que seja redonda */
         width: 150px;
         height: 150px;
         border-radius: 50%;
-        object-fit: cover;
+        object-fit: cover; /* Essencial para preencher o espaço mantendo a proporção */
         border: 3px solid #f0f0f0;
     }
     .icon-img {
@@ -79,9 +78,6 @@ def local_css():
         margin-right: 10px;
         vertical-align: middle;
     }
-    /* Mantendo seletores mais genéricos para h1 e p se possível, ou usando classes específicas */
-    /* Os seletores .st-emotion-cache-xxxxxx podem mudar com versões do Streamlit */
-    /* Se precisar estilizar h1/p especificamente dentro de .profile-info: */
     .profile-info h1 {
         font-weight: 700;
         color: #333;
@@ -97,17 +93,14 @@ def local_css():
         border-bottom: 1px solid #eee;
         padding-bottom: 5px;
     }
-    /* Estilos para o layout do perfil - AJUSTADO AQUI */
     .profile-container {
         display: flex;
-        align-items: center; /* Alinha verticalmente a imagem e o bloco de texto */
-        justify-content: center; /* Centraliza o conjunto imagem+texto na página se houver espaço */
+        align-items: center;
+        justify-content: center;
         margin-bottom: 30px;
-        /* flex-wrap: wrap; */ /* REMOVIDO para priorizar layout lado a lado */
     }
     .profile-pic-container {
-        margin-right: 20px; /* Espaço entre a foto e as informações */
-        /* margin-bottom: 10px; */ /* REMOVIDO pois era para o caso de 'wrap' */
+        margin-right: 20px;
     }
     .default-pic {
         width: 150px;
@@ -121,11 +114,9 @@ def local_css():
         color: #999;
     }
     .profile-info {
-        text-align: left; /* Texto dentro da div de informações alinhado à esquerda */
-        min-width: 0; /* Ajuda a prevenir que o texto cause overflow no container flex */
+        text-align: left;
+        min-width: 0;
     }
-
-    /* Estilos para ocultar header/footer do Streamlit e ajustar paddings */
     div[data-testid="stHeader"],
     div[data-testid="stToolbar"],
     div[data-testid="stDecoration"],
@@ -134,13 +125,13 @@ def local_css():
         display: none !important;
         visibility: hidden !important;
     }
-    footer[data-testid="stFooter"] { /* O footer padrão do Streamlit */
+    footer[data-testid="stFooter"] {
         display: none !important;
         visibility: hidden !important;
     }
-    .st-emotion-cache-1y4p8pa { /* Seletor para o container principal do app (pode variar) */
+    .st-emotion-cache-1y4p8pa {
         padding-top: 1rem !important;
-        padding-bottom: 5rem !important; /* Deixa espaço para o rodapé customizado fixo */
+        padding-bottom: 5rem !important;
     }
     div[data-testid="stAppViewBlockContainer"] {
         padding-top: 0 !important;
@@ -159,7 +150,7 @@ def local_css():
 # Converter imagem para base64
 def image_to_base64(image):
     buffered = io.BytesIO()
-    image.save(buffered, format="PNG") # Salvar como PNG para manter transparência, se houver
+    image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
 # Página de login do admin
@@ -189,9 +180,9 @@ def admin_page():
         profile = data["profile"]
         name = st.text_input("Nome", value=profile.get("name", ""))
         description = st.text_area("Descrição", value=profile.get("description", ""))
-        profile_image = st.file_uploader("Imagem de Perfil (Recomendado: 300x300 pixels)", type=["jpg", "jpeg", "png"])
+        profile_image_upload = st.file_uploader("Imagem de Perfil (Recomendado: 300x300 pixels)", type=["jpg", "jpeg", "png"])
 
-        col1_img, col2_info = st.columns([1, 2]) # Colunas apenas para organização no admin, não afeta frontend
+        col1_img, col2_info = st.columns([1, 2])
         with col1_img:
             if profile.get("image"):
                 try:
@@ -203,14 +194,14 @@ def admin_page():
             else:
                 st.markdown("<div class='default-pic' style='width:150px; height:150px; display:flex; align-items:center; justify-content:center; background-color:#f0f0f0; border-radius:50%; font-size:50px; color:#999;'><span>👤</span></div>", unsafe_allow_html=True)
 
-
         if st.button("Salvar Perfil"):
             data["profile"]["name"] = name
             data["profile"]["description"] = description
-            if profile_image is not None:
+            if profile_image_upload is not None:
                 try:
-                    image = Image.open(profile_image)
-                    image.thumbnail((300, 300)) # Mantém proporção e limita a 300x300
+                    image = Image.open(profile_image_upload)
+                    # AQUI A CORREÇÃO: Revertendo para image.resize como no original do usuário
+                    image = image.resize((300, 300)) # Força a imagem para 300x300 pixels
                     data["profile"]["image"] = image_to_base64(image)
                 except Exception as e:
                     st.error(f"Erro ao processar a imagem: {e}")
@@ -235,31 +226,25 @@ def admin_page():
                     if title and url:
                         if not url.startswith(("http://", "https://")):
                             url = "https://" + url
-
                         new_id = int(datetime.datetime.now().timestamp() * 1000)
                         new_link = {
-                            "id": new_id,
-                            "title": title,
-                            "url": url,
-                            "icon": icon,
-                            "category": category
+                            "id": new_id, "title": title, "url": url,
+                            "icon": icon, "category": category
                         }
                         data["links"].append(new_link)
                         save_data(data)
                         st.success(f"Link '{title}' adicionado com sucesso!")
-                        # Não precisa de st.rerun() aqui pois clear_on_submit=True e o próximo redraw atualiza
                     else:
                         st.warning("Por favor, preencha o título e a URL.")
 
-        else:  # Editar links existentes
+        else:
             st.subheader("Editar ou Remover Links")
             if not data["links"]:
                 st.info("Nenhum link cadastrado.")
             else:
-                for i, link_item in enumerate(list(data["links"])): # Usar list() para cópia segura
+                for i, link_item in enumerate(list(data["links"])):
                     st.markdown(f"**{link_item['title']}** (*{link_item['category']}*)")
                     st.caption(link_item['url'])
-
                     col_edit, col_remove = st.columns(2)
                     with col_edit:
                         if st.button("Editar", key=f"edit_{link_item['id']}"):
@@ -276,7 +261,6 @@ def admin_page():
             if "editing_link_id" in st.session_state:
                 link_id_to_edit = st.session_state["editing_link_id"]
                 link_to_edit = next((link for link in data["links"] if link["id"] == link_id_to_edit), None)
-
                 if link_to_edit:
                     st.subheader(f"Editando: {link_to_edit['title']}")
                     with st.form(key=f"edit_form_{link_id_to_edit}"):
@@ -284,18 +268,15 @@ def admin_page():
                         edited_url = st.text_input("URL", value=link_to_edit["url"], key=f"eu_{link_id_to_edit}")
                         edited_icon = st.text_input("Ícone", value=link_to_edit["icon"], key=f"ei_{link_id_to_edit}")
                         edited_category = st.text_input("Categoria", value=link_to_edit["category"], key=f"ec_{link_id_to_edit}")
-
                         save_button = st.form_submit_button("Salvar Alterações")
                         cancel_button = st.form_submit_button("Cancelar")
-
                         if save_button:
                             if not edited_url.startswith(("http://", "https://")):
                                 edited_url = "https://" + edited_url
-
-                            link_to_edit["title"] = edited_title
-                            link_to_edit["url"] = edited_url
-                            link_to_edit["icon"] = edited_icon
-                            link_to_edit["category"] = edited_category
+                            link_to_edit.update({
+                                "title": edited_title, "url": edited_url,
+                                "icon": edited_icon, "category": edited_category
+                            })
                             save_data(data)
                             st.success("Link atualizado com sucesso!")
                             del st.session_state["editing_link_id"]
@@ -309,7 +290,6 @@ def admin_page():
         current_password = st.text_input("Senha Atual", type="password")
         new_password = st.text_input("Nova Senha", type="password")
         confirm_password = st.text_input("Confirmar Nova Senha", type="password")
-
         if st.button("Alterar Senha"):
             if hashlib.sha256(current_password.encode()).hexdigest() != data["password"]:
                 st.error("Senha atual incorreta!")
@@ -324,66 +304,47 @@ def admin_page():
 
     elif admin_option == "Visualizar Site":
         st.session_state["page"] = "home"
-        st.query_params.clear() # Limpar query params ao ir para home
+        st.query_params.clear()
         st.rerun()
 
     if st.sidebar.button("Sair"):
         st.session_state["authenticated"] = False
         st.session_state["page"] = "home"
-        st.query_params.clear() # Limpar query params ao sair
+        st.query_params.clear()
         st.rerun()
 
-# Renderizar ícone
 def render_icon(icon_str):
-    if not icon_str:
-        return ""
-    # Para Font Awesome funcionar, o CSS do Font Awesome precisa ser carregado.
-    # Streamlit não facilita a adição de <link> tags no <head> diretamente.
-    # Uma solução seria usar st.markdown com <iframe> ou um componente customizado.
-    # Aqui, vamos apenas formatar como se o CSS estivesse disponível.
+    esc = st.session_state.html_escape
+    if not icon_str: return ""
     if icon_str.startswith("fa-"):
-        return f'<i class="fas {icon_str}" title="{icon_str}"></i>&nbsp;' # Adiciona &nbsp; para espaço
+        return f'<i class="fas {esc(icon_str)}" title="{esc(icon_str)}"></i>&nbsp;'
     elif icon_str.startswith(("http://", "https://")):
-        return f'<img src="{icon_str}" class="icon-img" alt="ícone">&nbsp;' # Adiciona &nbsp; para espaço
-    elif icon_str: # Se houver algo, mas não for FA nem URL, mostrar como texto simples
-        return f'{st.session_state.html_escape(icon_str)}&nbsp;'
+        return f'<img src="{esc(icon_str)}" class="icon-img" alt="ícone">&nbsp;'
+    elif icon_str:
+        return f'{esc(icon_str)}&nbsp;'
     return ""
 
-
-# Página principal (exibição de links)
 def home_page():
     profile = data.get("profile", {})
-
-    profile_name = profile.get("name", "Seu Nome")
-    profile_description = profile.get("description", "Sua Descrição")
+    esc = st.session_state.html_escape
+    profile_name = esc(profile.get("name", "Seu Nome"))
+    profile_description = esc(profile.get("description", "Sua Descrição"))
     profile_image_b64 = profile.get("image")
 
-    # Usar html.escape para segurança nos dados que vêm do JSON
-    esc = st.session_state.html_escape
-    
-    profile_html_parts = [
-        '<div class="profile-container">',
-        '<div class="profile-pic-container">'
-    ]
+    profile_html_parts = ['<div class="profile-container"><div class="profile-pic-container">']
     if profile_image_b64:
         try:
-            base64.b64decode(profile_image_b64) # Testa se é base64 válido
+            base64.b64decode(profile_image_b64)
             profile_html_parts.append(f'<img src="data:image/png;base64,{profile_image_b64}" class="profile-pic" alt="Foto de perfil">')
         except Exception:
             profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
     else:
         profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
-
     profile_html_parts.extend([
-        '</div>', # Fim de profile-pic-container
-        '<div class="profile-info">',
-        f'<h1>{esc(profile_name)}</h1>',
-        f'<p>{esc(profile_description)}</p>',
-        '</div>', # Fim de profile-info
-        '</div>'  # Fim de profile-container
+        '</div><div class="profile-info">',
+        f'<h1>{profile_name}</h1><p>{profile_description}</p></div></div>'
     ])
     st.markdown("".join(profile_html_parts), unsafe_allow_html=True)
-
 
     if not data.get("links"):
         st.info("Nenhum link adicionado ainda. Entre no painel administrativo para adicionar links.")
@@ -391,108 +352,73 @@ def home_page():
         categories = {}
         for link_item in data["links"]:
             category = link_item.get("category", "Outros")
-            if category not in categories:
-                categories[category] = []
+            if category not in categories: categories[category] = []
             categories[category].append(link_item)
-
         for category_name, links_in_category in categories.items():
             st.markdown(f"<h3 class='category-header'>{esc(category_name)}</h3>", unsafe_allow_html=True)
-
             num_links = len(links_in_category)
-            cols = st.columns(2) if num_links >= 1 else st.columns(1) # Sempre usa 2 colunas se houver links
-
+            cols = st.columns(2) if num_links >= 1 else st.columns(1)
             for i, link_item in enumerate(links_in_category):
                 current_col = cols[i % 2]
                 with current_col:
                     icon_html = render_icon(link_item.get("icon", ""))
                     link_title = esc(link_item.get("title", "Link"))
                     link_url = link_item.get("url", "#")
-
-                    st.markdown(f"""
-                    <a href="{link_url}" target="_blank" class="link-card">
-                        {icon_html}{link_title}
-                    </a>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f'<a href="{esc(link_url)}" target="_blank" class="link-card">{icon_html}{link_title}</a>', unsafe_allow_html=True)
 
     if st.button("Admin", key="home_admin_btn"):
         st.session_state["page"] = "admin_login"
-        st.query_params["admin"] = "true" # Define o query param
+        st.query_params["admin"] = "true"
         st.rerun()
 
-# --- Inicialização e Controle de Fluxo ---
 if "html_escape" not in st.session_state:
     st.session_state.html_escape = html.escape
 
 data = load_data()
 
 if "page" not in st.session_state:
-    if st.query_params.get("admin") == "true":
-        st.session_state["page"] = "admin_login"
-    else:
-        st.session_state["page"] = "home"
-
+    st.session_state["page"] = "admin_login" if st.query_params.get("admin") == "true" else "home"
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 local_css()
-
 current_page = st.session_state.get("page", "home")
 
 if current_page == "admin_login":
-    if st.session_state.get("authenticated"): # Se já autenticado e na pág de login, vai pro admin
-        st.session_state["page"] = "admin"
-        st.rerun()
-    else:
-        admin_login()
+    if st.session_state.get("authenticated"):
+        st.session_state["page"] = "admin"; st.rerun()
+    else: admin_login()
 elif current_page == "admin" and st.session_state.get("authenticated"):
     admin_page()
 else:
     if current_page != "home":
         st.session_state["page"] = "home"
-        if "admin" in st.query_params: # Limpa query param se não for para admin/admin_login
-           del st.query_params["admin"]
+        if "admin" in st.query_params: del st.query_params["admin"]
         st.rerun()
     home_page()
 
-
-# --- Rodapé Customizado ---
 def get_public_ip():
     try:
         response = requests.get('https://api.ipify.org', timeout=3)
         response.raise_for_status()
         return response.text
-    except requests.exceptions.RequestException:
-        return "IP indisponível"
+    except requests.exceptions.RequestException: return "IP indisponível"
 
 def obter_data_formatada():
     try:
         agora = datetime.datetime.now()
         dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
-        dia_semana = dias[agora.weekday()]
-        return f"{dia_semana}, {agora.strftime('%d/%m/%Y às %H:%M:%S')}"
-    except Exception:
-        return "Data/hora indisponível"
+        return f"{dias[agora.weekday()]}, {agora.strftime('%d/%m/%Y às %H:%M:%S')}"
+    except Exception: return "Data/hora indisponível"
 
 ip_publico = get_public_ip()
 data_hora = obter_data_formatada()
+esc = st.session_state.html_escape
 
 footer_html = f"""
-<div style="position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #ffffff;
-            color: #333333;
-            text-align: center;
-            padding: 8px 0;
-            font-size: 14px;
-            border-top: 1px solid #eee;
-            z-index: 1000;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-            ">
-    💻 IP: {st.session_state.html_escape(ip_publico)} &nbsp;&nbsp;|&nbsp;&nbsp; ⏰ {st.session_state.html_escape(data_hora)}
-</div>
-"""
+<div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #ffffff; color: #333333; text-align: center; padding: 8px 0; font-size: 14px; border-top: 1px solid #eee; z-index: 1000; box-shadow: 0 -2px 5px rgba(0,0,0,0.05);">
+    💻 IP: {esc(ip_publico)} &nbsp;&nbsp;|&nbsp;&nbsp; ⏰ {esc(data_hora)}
+</div>"""
 st.markdown(footer_html, unsafe_allow_html=True)
 
 st.markdown("""
@@ -500,5 +426,4 @@ st.markdown("""
     <hr style="border-top: 1px solid #eee; margin-bottom: 10px;">
     🔗 <strong>LinkPortfolio</strong> | Um web app para organizar seu portfólio c/ links,<br>
             contatos, aplicativos e projetos. Por <strong>Ary Ribeiro</strong>.
-</div>
-""", unsafe_allow_html=True)
+</div>""", unsafe_allow_html=True)
