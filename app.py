@@ -24,29 +24,20 @@ st.set_page_config(
 
 # Função para carregar ou criar o arquivo de dados
 def load_data():
-    # Tenta carregar do Google Drive primeiro
     gdrive_url = os.getenv("GOOGLE_DRIVE_JSON_URL")
     if gdrive_url:
         try:
-            # st.info(f"Tentando carregar dados do Google Drive: {gdrive_url}") # Para debug
-            response = requests.get(gdrive_url, timeout=10) # Timeout de 10 segundos
-            response.raise_for_status()  # Levanta um erro para códigos HTTP 4xx/5xx
+            response = requests.get(gdrive_url, timeout=10)
+            response.raise_for_status()
             data = response.json()
-            # st.success("Dados carregados com sucesso do Google Drive!") # Para debug
-            
-            # Opcional: Salvar uma cópia local ao carregar do GDrive pela primeira vez ou para cache
-            # with open("links_data_gdrive_cache.json", "w", encoding="utf-8") as f:
-            #    json.dump(data, f, ensure_ascii=False, indent=4)
             return data
         except requests.exceptions.RequestException as e:
             st.warning(f"Falha ao baixar dados do Google Drive ({e}). Usando fallback local.")
         except json.JSONDecodeError as e:
             st.warning(f"Falha ao decodificar JSON do Google Drive ({e}). Usando fallback local.")
-        except Exception as e: # Outras exceções inesperadas
+        except Exception as e:
             st.warning(f"Erro inesperado ao carregar do Google Drive ({e}). Usando fallback local.")
 
-    # Fallback: Carregar do arquivo local ou criar um novo
-    # st.info("Usando arquivo local links_data.json.") # Para debug
     local_file_path = "links_data.json"
     if os.path.exists(local_file_path):
         try:
@@ -54,15 +45,16 @@ def load_data():
                 return json.load(f)
         except json.JSONDecodeError:
             st.error(f"Arquivo local '{local_file_path}' está corrompido. Criando um novo com dados padrão.")
-            # Se corrompido, força a criação de um novo
-            os.remove(local_file_path) # Remove o arquivo corrompido
+            if os.path.exists(local_file_path):
+                try: os.remove(local_file_path)
+                except OSError as e: st.error(f"Não foi possível remover o arquivo corrompido: {e}")
         except Exception as e:
             st.error(f"Erro ao ler arquivo local '{local_file_path}': {e}. Criando um novo com dados padrão.")
-            if os.path.exists(local_file_path): # Tenta remover se ainda existe
+            if os.path.exists(local_file_path):
                  try: os.remove(local_file_path)
-                 except: pass
+                 except OSError as e: st.error(f"Não foi possível remover o arquivo: {e}")
 
-    # Se o arquivo não existe localmente (ou falhou ao carregar/estava corrompido), cria com dados padrão
+
     default_data = {
         "profile": {
             "name": "Seu Nome",
@@ -75,13 +67,11 @@ def load_data():
     try:
         with open(local_file_path, "w", encoding="utf-8") as f:
             json.dump(default_data, f, ensure_ascii=False, indent=4)
-        # st.info(f"Arquivo local '{local_file_path}' criado com dados padrão.") # Para debug
     except Exception as e:
         st.error(f"Não foi possível criar o arquivo de dados local: {e}")
-        # Retorna default_data em memória se não conseguir escrever no disco
     return default_data
 
-# Função para salvar dados (permanece salvando localmente)
+# Função para salvar dados
 def save_data(data):
     try:
         with open("links_data.json", "w", encoding="utf-8") as f:
@@ -229,13 +219,12 @@ def admin_page():
 
     if admin_option == "Perfil":
         st.header("Editar Perfil")
-        # Usar .get com dicionário vazio como padrão para evitar erros se 'profile' não existir
         profile_data = data.get("profile", {})
         name = st.text_input("Nome", value=profile_data.get("name", ""))
         description = st.text_area("Descrição", value=profile_data.get("description", ""))
         profile_image_upload = st.file_uploader("Imagem de Perfil (Recomendado: 300x300 pixels)", type=["jpg", "jpeg", "png"])
 
-        col1_img, _ = st.columns([1, 2]) # A segunda coluna não é usada explicitamente aqui
+        col1_img, _ = st.columns([1, 2])
         with col1_img:
             current_image_b64 = profile_data.get("image")
             if current_image_b64:
@@ -250,7 +239,6 @@ def admin_page():
 
 
         if st.button("Salvar Perfil"):
-            # Garante que 'profile' exista em 'data'
             if "profile" not in data or not isinstance(data["profile"], dict):
                 data["profile"] = {}
             
@@ -272,27 +260,28 @@ def admin_page():
         action = st.radio("Ação", ["Adicionar Novo Link", "Editar Links Existentes"])
 
         if "links" not in data or not isinstance(data["links"], list):
-            data["links"] = [] # Garante que data["links"] seja uma lista
+            data["links"] = []
 
         if action == "Adicionar Novo Link":
             st.subheader("Adicionar Novo Link")
             with st.form("new_link_form", clear_on_submit=True):
                 title = st.text_input("Título do Link")
-                url = st.text_input("URL")
+                url_input = st.text_input("URL") # Renomeada para url_input para clareza
                 icon = st.text_input("Ícone (URL ou nome Font Awesome)", help="Ex: fa-instagram ou URL para uma imagem")
                 category = st.text_input("Categoria", value="Links Úteis",
                                          help="Agrupa links em categorias como 'Redes Sociais', 'Projetos', 'Contato'")
                 submitted = st.form_submit_button("Adicionar Link")
                 if submitted:
-                    if title and url:
-                        if not url.startswith(("http://", "https://")):
-                            url = "https://" + url
-
+                    if title and url_input:
+                        # REMOVIDO: Lógica que força https
+                        # if not url_input.startswith(("http://", "https://")):
+                        # url_input = "https://" + url_input
+                        
                         new_id = int(datetime.datetime.now().timestamp() * 1000)
                         new_link = {
                             "id": new_id,
                             "title": title,
-                            "url": url,
+                            "url": url_input, # Usa url_input diretamente
                             "icon": icon,
                             "category": category
                         }
@@ -307,12 +296,12 @@ def admin_page():
             if not data["links"]:
                 st.info("Nenhum link cadastrado.")
             else:
-                for i, link_item in enumerate(list(data["links"])): # Usar list() para cópia segura
+                for i, link_item in enumerate(list(data["links"])):
                     st.markdown(f"**{link_item.get('title','N/A')}** (*{link_item.get('category','N/A')}*)")
                     st.caption(link_item.get('url','N/A'))
 
                     col_edit, col_remove = st.columns(2)
-                    link_id = link_item.get('id', f"no_id_{i}") # Fallback para ID
+                    link_id = link_item.get('id', f"no_id_{i}")
                     with col_edit:
                         if st.button("Editar", key=f"edit_{link_id}"):
                             st.session_state["editing_link_id"] = link_id
@@ -327,7 +316,6 @@ def admin_page():
 
             if "editing_link_id" in st.session_state:
                 link_id_to_edit = st.session_state["editing_link_id"]
-                # Encontrar o link para editar
                 link_to_edit = None
                 link_index = -1
                 for idx, lnk in enumerate(data["links"]):
@@ -340,7 +328,7 @@ def admin_page():
                     st.subheader(f"Editando: {link_to_edit.get('title','N/A')}")
                     with st.form(key=f"edit_form_{link_id_to_edit}"):
                         edited_title = st.text_input("Título", value=link_to_edit.get("title",""), key=f"et_{link_id_to_edit}")
-                        edited_url = st.text_input("URL", value=link_to_edit.get("url",""), key=f"eu_{link_id_to_edit}")
+                        edited_url_input = st.text_input("URL", value=link_to_edit.get("url",""), key=f"eu_{link_id_to_edit}") # Renomeada
                         edited_icon = st.text_input("Ícone", value=link_to_edit.get("icon",""), key=f"ei_{link_id_to_edit}")
                         edited_category = st.text_input("Categoria", value=link_to_edit.get("category",""), key=f"ec_{link_id_to_edit}")
 
@@ -348,12 +336,12 @@ def admin_page():
                         cancel_button = st.form_submit_button("Cancelar")
 
                         if save_button:
-                            if not edited_url.startswith(("http://", "https://")):
-                                edited_url = "https://" + edited_url
+                            # REMOVIDO: Lógica que força https
+                            # if not edited_url_input.startswith(("http://", "https://")):
+                            # edited_url_input = "https://" + edited_url_input
                             
-                            # Atualizar o dicionário diretamente na lista
                             data["links"][link_index]["title"] = edited_title
-                            data["links"][link_index]["url"] = edited_url
+                            data["links"][link_index]["url"] = edited_url_input # Usa edited_url_input diretamente
                             data["links"][link_index]["icon"] = edited_icon
                             data["links"][link_index]["category"] = edited_category
                             
@@ -364,7 +352,7 @@ def admin_page():
                         if cancel_button:
                             del st.session_state["editing_link_id"]
                             st.rerun()
-                else: # Link não encontrado, limpar estado
+                else:
                     if "editing_link_id" in st.session_state:
                         del st.session_state["editing_link_id"]
                         st.warning("Link para edição não encontrado. Tente novamente.")
@@ -373,9 +361,8 @@ def admin_page():
 
     elif admin_option == "Alterar Senha":
         st.header("Alterar Senha")
-        # Garante que 'password' exista em 'data'
-        if "password" not in data:
-            data["password"] = hashlib.sha256("admin123".encode()).hexdigest() # Senha padrão se não existir
+        if "password" not in data: # Garante que data["password"] exista
+            data["password"] = hashlib.sha256("admin123".encode()).hexdigest()
 
         current_password = st.text_input("Senha Atual", type="password")
         new_password = st.text_input("Nova Senha", type="password")
@@ -411,22 +398,23 @@ def render_icon(icon_str):
     esc = st.session_state.html_escape
     if icon_str.startswith("fa-"):
         return f'<i class="fas {esc(icon_str)}" title="{esc(icon_str)}"></i>&nbsp;'
-    elif icon_str.startswith(("http://", "https://")):
-        return f'<img src="{esc(icon_str)}" class="icon-img" alt="ícone">&nbsp;'
-    elif icon_str: # Se houver algo, mas não for FA nem URL, mostrar como texto simples
-        return f'{esc(icon_str)}&nbsp;'
+    elif icon_str.startswith(("http://", "https://", "mailto:", "ftp://", "tel:")): # Expandido para mais esquemas comuns
+        return f'<img src="{esc(icon_str)}" class="icon-img" alt="ícone">&nbsp;' # Ícones de imagem podem não funcionar para mailto:, etc.
+    elif icon_str: # Se houver algo, mas não for FA nem URL de imagem, mostrar como texto simples ou um ícone genérico
+        # Poderia ter uma lógica mais sofisticada aqui para escolher ícones baseados no texto
+        return f'{esc(icon_str)}&nbsp;' # Exibe o texto do ícone se não for reconhecido
     return ""
 
 
 # Página principal (exibição de links)
 def home_page():
-    profile = data.get("profile", {}) # Usar .get para segurança
+    profile = data.get("profile", {})
 
     profile_name = profile.get("name", "Seu Nome")
     profile_description = profile.get("description", "Sua Descrição")
     profile_image_b64 = profile.get("image")
 
-    esc = st.session_state.html_escape # Função de escape HTML
+    esc = st.session_state.html_escape
 
     profile_html_parts = [
         '<div class="profile-container">',
@@ -434,25 +422,24 @@ def home_page():
     ]
     if profile_image_b64:
         try:
-            base64.b64decode(profile_image_b64) # Validação simples de base64
+            base64.b64decode(profile_image_b64)
             profile_html_parts.append(f'<img src="data:image/png;base64,{profile_image_b64}" class="profile-pic" alt="Foto de perfil">')
-        except Exception: # Se não for base64 válida ou outro erro, mostra default
+        except Exception:
             profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
     else:
         profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
 
     profile_html_parts.extend([
-        '</div>', # Fim de profile-pic-container
+        '</div>',
         '<div class="profile-info">',
         f'<h1>{esc(profile_name)}</h1>',
         f'<p>{esc(profile_description)}</p>',
-        '</div>', # Fim de profile-info
-        '</div>'  # Fim de profile-container
+        '</div>',
+        '</div>'
     ])
     st.markdown("".join(profile_html_parts), unsafe_allow_html=True)
 
 
-    # Garante que 'links' seja uma lista
     page_links = data.get("links", [])
     if not isinstance(page_links, list):
         page_links = []
@@ -462,7 +449,7 @@ def home_page():
     else:
         categories = {}
         for link_item in page_links:
-            if not isinstance(link_item, dict): continue # Pula links malformados
+            if not isinstance(link_item, dict): continue
             category = link_item.get("category", "Outros")
             if category not in categories:
                 categories[category] = []
@@ -472,36 +459,32 @@ def home_page():
             st.markdown(f"<h3 class='category-header'>{esc(category_name)}</h3>", unsafe_allow_html=True)
 
             num_links = len(links_in_category)
-            # Ajuste para usar st.columns(2) sempre que houver links, para consistência
-            # Ou st.columns(1) se for preferível para um único link na categoria
             cols = st.columns(2 if num_links > 0 else 1)
 
 
             for i, link_item in enumerate(links_in_category):
-                # Distribui os links entre as colunas
                 current_col_index = i % 2
                 with cols[current_col_index]:
                     icon_html = render_icon(link_item.get("icon", ""))
                     link_title = esc(link_item.get("title", "Link"))
-                    link_url = link_item.get("url", "#")
+                    link_url = link_item.get("url", "#") # URL já está como o usuário digitou
 
                     st.markdown(f"""
                     <a href="{esc(link_url)}" target="_blank" class="link-card">
                         {icon_html}{link_title}
                     </a>
                     """, unsafe_allow_html=True)
-    
-    # Botão Admin na página principal
+
     if st.button("Admin", key="home_admin_btn"):
         st.session_state["page"] = "admin_login"
-        st.query_params["admin"] = "true" # Adiciona query param ao clicar
+        st.query_params["admin"] = "true"
         st.rerun()
 
 # --- Inicialização e Controle de Fluxo ---
 if "html_escape" not in st.session_state:
     st.session_state.html_escape = html.escape
 
-data = load_data() # Carrega os dados (do GDrive ou local)
+data = load_data()
 
 if "page" not in st.session_state:
     if st.query_params.get("admin") == "true":
@@ -512,22 +495,22 @@ if "page" not in st.session_state:
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
-local_css() # Aplica CSS
+local_css()
 
 current_page = st.session_state.get("page", "home")
 
 if current_page == "admin_login":
     if st.session_state.get("authenticated"):
-        st.session_state["page"] = "admin" # Se já autenticado, vai para admin
+        st.session_state["page"] = "admin"
         st.rerun()
     else:
         admin_login()
 elif current_page == "admin" and st.session_state.get("authenticated"):
     admin_page()
-else: # Inclui "home" ou qualquer estado inválido/não autenticado para admin
-    if current_page != "home": # Se estava tentando acessar admin sem auth, volta pra home
+else:
+    if current_page != "home":
         st.session_state["page"] = "home"
-        if "admin" in st.query_params: # Limpa query param se estava tentando acessar admin e falhou
+        if "admin" in st.query_params:
            del st.query_params["admin"]
         st.rerun()
     home_page()
@@ -575,7 +558,7 @@ footer_html = f"""
 st.markdown(footer_html, unsafe_allow_html=True)
 
 st.markdown("""
-<div style="text-align:center; margin-top:30px; margin-bottom: 70px; /* Espaço para o rodapé fixo */ padding:10px; color:#555; font-size:14px;">
+<div style="text-align:center; margin-top:30px; margin-bottom: 70px; padding:10px; color:#555; font-size:14px;">
     <hr style="border-top: 1px solid #eee; margin-bottom: 10px;">
     🔗 <strong>LinkPortfolio</strong> | Um web app para organizar seu portfólio c/ links,<br>
             contatos, aplicativos e projetos. Por <strong>Ary Ribeiro</strong>.
