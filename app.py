@@ -4,7 +4,7 @@ import json
 import os
 import hashlib
 import base64
-from PIL import Image # Módulo Image da Pillow é importado
+from PIL import Image
 import io
 import datetime
 import requests
@@ -22,28 +22,29 @@ st.set_page_config(
 def load_data():
     if os.path.exists("links_data.json"):
         try:
-            with open("links_data.json", "r", encoding="utf-8") as f:
+            with open("links_data.json", "r", encoding="utf-8") as f: # Especifica encoding
                 return json.load(f)
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError: # Se o JSON estiver corrompido, cria um novo
+            pass # Cai para o bloco 'else' abaixo para criar um novo arquivo
 
+    # Se o arquivo não existe ou está corrompido, cria um com dados padrão
     default_data = {
         "profile": {
             "name": "Seu Nome",
             "description": "Professor e Desenvolvedor",
             "image": None
         },
-        "password": hashlib.sha256("admin123".encode()).hexdigest(),
+        "password": hashlib.sha256("admin123".encode()).hexdigest(),  # senha padrão: admin123
         "links": []
     }
-    with open("links_data.json", "w", encoding="utf-8") as f:
-        json.dump(default_data, f, ensure_ascii=False, indent=4)
+    with open("links_data.json", "w", encoding="utf-8") as f: # Especifica encoding
+        json.dump(default_data, f, ensure_ascii=False, indent=4) # Adiciona ensure_ascii e indent para melhor formatação
     return default_data
 
 # Função para salvar dados
 def save_data(data):
-    with open("links_data.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    with open("links_data.json", "w", encoding="utf-8") as f: # Especifica encoding
+        json.dump(data, f, ensure_ascii=False, indent=4) # Adiciona ensure_ascii e indent
 
 # Carregar CSS personalizado
 def local_css():
@@ -65,11 +66,11 @@ def local_css():
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
     }
-    .profile-pic { /* CSS para a foto de perfil, garantindo que seja redonda */
+    .profile-pic {
         width: 150px;
         height: 150px;
         border-radius: 50%;
-        object-fit: cover; /* Essencial para preencher o espaço mantendo a proporção */
+        object-fit: cover;
         border: 3px solid #f0f0f0;
     }
     .icon-img {
@@ -115,8 +116,10 @@ def local_css():
     }
     .profile-info {
         text-align: left;
-        min-width: 0;
+        /* min-width: 0; */ /* REMOVIDO - esta foi a única adição de propriedade na vizinhança na última rodada */
     }
+
+    /* Estilos para ocultar header/footer do Streamlit e ajustar paddings */
     div[data-testid="stHeader"],
     div[data-testid="stToolbar"],
     div[data-testid="stDecoration"],
@@ -180,7 +183,7 @@ def admin_page():
         profile = data["profile"]
         name = st.text_input("Nome", value=profile.get("name", ""))
         description = st.text_area("Descrição", value=profile.get("description", ""))
-        profile_image_upload = st.file_uploader("Imagem de Perfil (Recomendado: 300x300 pixels)", type=["jpg", "jpeg", "png"])
+        profile_image = st.file_uploader("Imagem de Perfil (Recomendado: 300x300 pixels)", type=["jpg", "jpeg", "png"])
 
         col1_img, col2_info = st.columns([1, 2])
         with col1_img:
@@ -194,14 +197,14 @@ def admin_page():
             else:
                 st.markdown("<div class='default-pic' style='width:150px; height:150px; display:flex; align-items:center; justify-content:center; background-color:#f0f0f0; border-radius:50%; font-size:50px; color:#999;'><span>👤</span></div>", unsafe_allow_html=True)
 
+
         if st.button("Salvar Perfil"):
             data["profile"]["name"] = name
             data["profile"]["description"] = description
-            if profile_image_upload is not None:
+            if profile_image is not None:
                 try:
-                    image = Image.open(profile_image_upload)
-                    # AQUI A CORREÇÃO: Revertendo para image.resize como no original do usuário
-                    image = image.resize((300, 300)) # Força a imagem para 300x300 pixels
+                    image = Image.open(profile_image)
+                    image.thumbnail((300, 300))
                     data["profile"]["image"] = image_to_base64(image)
                 except Exception as e:
                     st.error(f"Erro ao processar a imagem: {e}")
@@ -226,10 +229,14 @@ def admin_page():
                     if title and url:
                         if not url.startswith(("http://", "https://")):
                             url = "https://" + url
+
                         new_id = int(datetime.datetime.now().timestamp() * 1000)
                         new_link = {
-                            "id": new_id, "title": title, "url": url,
-                            "icon": icon, "category": category
+                            "id": new_id,
+                            "title": title,
+                            "url": url,
+                            "icon": icon,
+                            "category": category
                         }
                         data["links"].append(new_link)
                         save_data(data)
@@ -245,6 +252,7 @@ def admin_page():
                 for i, link_item in enumerate(list(data["links"])):
                     st.markdown(f"**{link_item['title']}** (*{link_item['category']}*)")
                     st.caption(link_item['url'])
+
                     col_edit, col_remove = st.columns(2)
                     with col_edit:
                         if st.button("Editar", key=f"edit_{link_item['id']}"):
@@ -261,6 +269,7 @@ def admin_page():
             if "editing_link_id" in st.session_state:
                 link_id_to_edit = st.session_state["editing_link_id"]
                 link_to_edit = next((link for link in data["links"] if link["id"] == link_id_to_edit), None)
+
                 if link_to_edit:
                     st.subheader(f"Editando: {link_to_edit['title']}")
                     with st.form(key=f"edit_form_{link_id_to_edit}"):
@@ -268,15 +277,18 @@ def admin_page():
                         edited_url = st.text_input("URL", value=link_to_edit["url"], key=f"eu_{link_id_to_edit}")
                         edited_icon = st.text_input("Ícone", value=link_to_edit["icon"], key=f"ei_{link_id_to_edit}")
                         edited_category = st.text_input("Categoria", value=link_to_edit["category"], key=f"ec_{link_id_to_edit}")
+
                         save_button = st.form_submit_button("Salvar Alterações")
                         cancel_button = st.form_submit_button("Cancelar")
+
                         if save_button:
                             if not edited_url.startswith(("http://", "https://")):
                                 edited_url = "https://" + edited_url
-                            link_to_edit.update({
-                                "title": edited_title, "url": edited_url,
-                                "icon": edited_icon, "category": edited_category
-                            })
+
+                            link_to_edit["title"] = edited_title
+                            link_to_edit["url"] = edited_url
+                            link_to_edit["icon"] = edited_icon
+                            link_to_edit["category"] = edited_category
                             save_data(data)
                             st.success("Link atualizado com sucesso!")
                             del st.session_state["editing_link_id"]
@@ -290,6 +302,7 @@ def admin_page():
         current_password = st.text_input("Senha Atual", type="password")
         new_password = st.text_input("Nova Senha", type="password")
         confirm_password = st.text_input("Confirmar Nova Senha", type="password")
+
         if st.button("Alterar Senha"):
             if hashlib.sha256(current_password.encode()).hexdigest() != data["password"]:
                 st.error("Senha atual incorreta!")
@@ -313,9 +326,11 @@ def admin_page():
         st.query_params.clear()
         st.rerun()
 
+# Renderizar ícone
 def render_icon(icon_str):
+    if not icon_str:
+        return ""
     esc = st.session_state.html_escape
-    if not icon_str: return ""
     if icon_str.startswith("fa-"):
         return f'<i class="fas {esc(icon_str)}" title="{esc(icon_str)}"></i>&nbsp;'
     elif icon_str.startswith(("http://", "https://")):
@@ -324,14 +339,21 @@ def render_icon(icon_str):
         return f'{esc(icon_str)}&nbsp;'
     return ""
 
+
+# Página principal (exibição de links)
 def home_page():
     profile = data.get("profile", {})
-    esc = st.session_state.html_escape
-    profile_name = esc(profile.get("name", "Seu Nome"))
-    profile_description = esc(profile.get("description", "Sua Descrição"))
+
+    profile_name = profile.get("name", "Seu Nome")
+    profile_description = profile.get("description", "Sua Descrição")
     profile_image_b64 = profile.get("image")
 
-    profile_html_parts = ['<div class="profile-container"><div class="profile-pic-container">']
+    esc = st.session_state.html_escape
+
+    profile_html_parts = [
+        '<div class="profile-container">',
+        '<div class="profile-pic-container">'
+    ]
     if profile_image_b64:
         try:
             base64.b64decode(profile_image_b64)
@@ -340,11 +362,17 @@ def home_page():
             profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
     else:
         profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
+
     profile_html_parts.extend([
-        '</div><div class="profile-info">',
-        f'<h1>{profile_name}</h1><p>{profile_description}</p></div></div>'
+        '</div>',
+        '<div class="profile-info">',
+        f'<h1>{esc(profile_name)}</h1>',
+        f'<p>{esc(profile_description)}</p>',
+        '</div>',
+        '</div>'
     ])
     st.markdown("".join(profile_html_parts), unsafe_allow_html=True)
+
 
     if not data.get("links"):
         st.info("Nenhum link adicionado ainda. Entre no painel administrativo para adicionar links.")
@@ -352,73 +380,109 @@ def home_page():
         categories = {}
         for link_item in data["links"]:
             category = link_item.get("category", "Outros")
-            if category not in categories: categories[category] = []
+            if category not in categories:
+                categories[category] = []
             categories[category].append(link_item)
+
         for category_name, links_in_category in categories.items():
             st.markdown(f"<h3 class='category-header'>{esc(category_name)}</h3>", unsafe_allow_html=True)
+
             num_links = len(links_in_category)
             cols = st.columns(2) if num_links >= 1 else st.columns(1)
+
             for i, link_item in enumerate(links_in_category):
                 current_col = cols[i % 2]
                 with current_col:
                     icon_html = render_icon(link_item.get("icon", ""))
                     link_title = esc(link_item.get("title", "Link"))
                     link_url = link_item.get("url", "#")
-                    st.markdown(f'<a href="{esc(link_url)}" target="_blank" class="link-card">{icon_html}{link_title}</a>', unsafe_allow_html=True)
+
+                    st.markdown(f"""
+                    <a href="{link_url}" target="_blank" class="link-card">
+                        {icon_html}{link_title}
+                    </a>
+                    """, unsafe_allow_html=True)
 
     if st.button("Admin", key="home_admin_btn"):
         st.session_state["page"] = "admin_login"
         st.query_params["admin"] = "true"
         st.rerun()
 
+# --- Inicialização e Controle de Fluxo ---
 if "html_escape" not in st.session_state:
     st.session_state.html_escape = html.escape
 
 data = load_data()
 
 if "page" not in st.session_state:
-    st.session_state["page"] = "admin_login" if st.query_params.get("admin") == "true" else "home"
+    if st.query_params.get("admin") == "true":
+        st.session_state["page"] = "admin_login"
+    else:
+        st.session_state["page"] = "home"
+
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 local_css()
+
 current_page = st.session_state.get("page", "home")
 
 if current_page == "admin_login":
     if st.session_state.get("authenticated"):
-        st.session_state["page"] = "admin"; st.rerun()
-    else: admin_login()
+        st.session_state["page"] = "admin"
+        st.rerun()
+    else:
+        admin_login()
 elif current_page == "admin" and st.session_state.get("authenticated"):
     admin_page()
 else:
     if current_page != "home":
         st.session_state["page"] = "home"
-        if "admin" in st.query_params: del st.query_params["admin"]
+        if "admin" in st.query_params:
+           del st.query_params["admin"]
         st.rerun()
     home_page()
 
+
+# --- Rodapé Customizado ---
 def get_public_ip():
     try:
         response = requests.get('https://api.ipify.org', timeout=3)
         response.raise_for_status()
         return response.text
-    except requests.exceptions.RequestException: return "IP indisponível"
+    except requests.exceptions.RequestException:
+        return "IP indisponível"
 
 def obter_data_formatada():
     try:
         agora = datetime.datetime.now()
         dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
-        return f"{dias[agora.weekday()]}, {agora.strftime('%d/%m/%Y às %H:%M:%S')}"
-    except Exception: return "Data/hora indisponível"
+        dia_semana = dias[agora.weekday()]
+        return f"{dia_semana}, {agora.strftime('%d/%m/%Y às %H:%M:%S')}"
+    except Exception:
+        return "Data/hora indisponível"
 
 ip_publico = get_public_ip()
 data_hora = obter_data_formatada()
 esc = st.session_state.html_escape
 
 footer_html = f"""
-<div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #ffffff; color: #333333; text-align: center; padding: 8px 0; font-size: 14px; border-top: 1px solid #eee; z-index: 1000; box-shadow: 0 -2px 5px rgba(0,0,0,0.05);">
+<div style="position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            color: #333333;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            z-index: 1000;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+            ">
     💻 IP: {esc(ip_publico)} &nbsp;&nbsp;|&nbsp;&nbsp; ⏰ {esc(data_hora)}
-</div>"""
+</div>
+"""
 st.markdown(footer_html, unsafe_allow_html=True)
 
 st.markdown("""
@@ -426,4 +490,5 @@ st.markdown("""
     <hr style="border-top: 1px solid #eee; margin-bottom: 10px;">
     🔗 <strong>LinkPortfolio</strong> | Um web app para organizar seu portfólio c/ links,<br>
             contatos, aplicativos e projetos. Por <strong>Ary Ribeiro</strong>.
-</div>""", unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
