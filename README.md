@@ -89,3 +89,23 @@ LinkPortfolio é uma aplicação web simples e elegante, construída em Python e
 Com o ambiente virtual ativado e as dependências instaladas, execute o Streamlit:
 ```bash
 streamlit run app.py
+
+A aplicação será aberta automaticamente no seu navegador padrão.
+🔑 Acesso ao Painel Administrativo
+
+    Você pode acessar o painel administrativo clicando no botão "Admin" na página principal (se visível) ou navegando para /?admin=true na URL do seu app.
+    A senha padrão inicial é admin123. É altamente recomendável alterá-la imediatamente após o primeiro login através da opção "Alterar Senha" no menu do painel administrativo.
+
+📄 Arquivo de Dados (links_data.json)
+
+    Este arquivo JSON armazena todas as configurações do seu perfil, links e a hash da senha do administrador.
+    Se não for encontrado (e nenhuma URL do Google Drive for fornecida), um arquivo links_data.json com dados padrão será criado na primeira execução.
+
+☁️ Deploy (Exemplo: Streamlit Community Cloud)
+
+    Certifique-se de que seu requirements.txt está correto.
+    Se estiver usando a funcionalidade de carregar do Google Drive, configure a variável GOOGLE_DRIVE_JSON_URL como um "Secret" nas configurações do seu app no Streamlit Community Cloud.
+
+👨‍💻 Autor
+
+    Ary Ribeiro - aryribeiro@gmail.com
