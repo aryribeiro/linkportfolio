@@ -22,29 +22,28 @@ st.set_page_config(
 def load_data():
     if os.path.exists("links_data.json"):
         try:
-            with open("links_data.json", "r", encoding="utf-8") as f: # Especifica encoding
+            with open("links_data.json", "r", encoding="utf-8") as f:
                 return json.load(f)
-        except json.JSONDecodeError: # Se o JSON estiver corrompido, cria um novo
-            pass # Cai para o bloco 'else' abaixo para criar um novo arquivo
+        except json.JSONDecodeError:
+            pass
 
-    # Se o arquivo não existe ou está corrompido, cria um com dados padrão
     default_data = {
         "profile": {
             "name": "Seu Nome",
             "description": "Professor e Desenvolvedor",
             "image": None
         },
-        "password": hashlib.sha256("admin123".encode()).hexdigest(),  # senha padrão: admin123
+        "password": hashlib.sha256("admin123".encode()).hexdigest(),
         "links": []
     }
-    with open("links_data.json", "w", encoding="utf-8") as f: # Especifica encoding
-        json.dump(default_data, f, ensure_ascii=False, indent=4) # Adiciona ensure_ascii e indent para melhor formatação
+    with open("links_data.json", "w", encoding="utf-8") as f:
+        json.dump(default_data, f, ensure_ascii=False, indent=4)
     return default_data
 
 # Função para salvar dados
 def save_data(data):
-    with open("links_data.json", "w", encoding="utf-8") as f: # Especifica encoding
-        json.dump(data, f, ensure_ascii=False, indent=4) # Adiciona ensure_ascii e indent
+    with open("links_data.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # Carregar CSS personalizado
 def local_css():
@@ -82,9 +81,13 @@ def local_css():
     .profile-info h1 {
         font-weight: 700;
         color: #333;
+        margin-top: 0; /* Evitar margem superior no h1 que possa desalinhá-lo */
     }
     .profile-info p {
         color: #555;
+        overflow-wrap: break-word; /* Quebra palavras longas para evitar overflow */
+        word-wrap: break-word; /* Compatibilidade com navegadores mais antigos */
+        margin-bottom: 0; /* Evitar margem inferior no p */
     }
     .category-header {
         font-weight: 600;
@@ -96,12 +99,13 @@ def local_css():
     }
     .profile-container {
         display: flex;
-        align-items: center;
+        align-items: center; /* Alinha verticalmente a imagem e o bloco de texto */
         justify-content: center;
         margin-bottom: 30px;
     }
     .profile-pic-container {
         margin-right: 20px;
+        flex-shrink: 0; /* Impede que o container da imagem encolha */
     }
     .default-pic {
         width: 150px;
@@ -116,7 +120,8 @@ def local_css():
     }
     .profile-info {
         text-align: left;
-        /* min-width: 0; */ /* REMOVIDO - esta foi a única adição de propriedade na vizinhança na última rodada */
+        min-width: 0; /* Permite que o item flex encolha corretamente e o texto quebre */
+        /* flex-grow: 1; /* Opcional: Faz com que o texto ocupe o espaço restante */
     }
 
     /* Estilos para ocultar header/footer do Streamlit e ajustar paddings */
@@ -132,9 +137,9 @@ def local_css():
         display: none !important;
         visibility: hidden !important;
     }
-    .st-emotion-cache-1y4p8pa {
+    .st-emotion-cache-1y4p8pa { /* Este seletor pode mudar com versões do Streamlit */
         padding-top: 1rem !important;
-        padding-bottom: 5rem !important;
+        padding-bottom: 5rem !important; /* Espaço para rodapé fixo */
     }
     div[data-testid="stAppViewBlockContainer"] {
         padding-top: 0 !important;
