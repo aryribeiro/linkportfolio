@@ -8,6 +8,7 @@ from PIL import Image
 import io
 import datetime
 import requests
+import html # Para st.session_state.html_escape
 
 # Configuração da página
 st.set_page_config(
@@ -78,18 +79,15 @@ def local_css():
         margin-right: 10px;
         vertical-align: middle;
     }
-    .st-emotion-cache-16txtl3 h1,
-    .st-emotion-cache-q8sbsg h1 {
+    /* Mantendo seletores mais genéricos para h1 e p se possível, ou usando classes específicas */
+    /* Os seletores .st-emotion-cache-xxxxxx podem mudar com versões do Streamlit */
+    /* Se precisar estilizar h1/p especificamente dentro de .profile-info: */
+    .profile-info h1 {
         font-weight: 700;
         color: #333;
     }
-    .st-emotion-cache-16txtl3 p,
-    .st-emotion-cache-q8sbsg p {
+    .profile-info p {
         color: #555;
-    }
-    footer {
-        /* Esta regra pode ser sobrescrita pelo CSS mais específico abaixo, o que é bom */
-        /* visibility: hidden; */
     }
     .category-header {
         font-weight: 600;
@@ -99,17 +97,17 @@ def local_css():
         border-bottom: 1px solid #eee;
         padding-bottom: 5px;
     }
-    /* Novos estilos para o layout do perfil */
+    /* Estilos para o layout do perfil - AJUSTADO AQUI */
     .profile-container {
         display: flex;
-        align-items: center;
-        justify-content: center;
+        align-items: center; /* Alinha verticalmente a imagem e o bloco de texto */
+        justify-content: center; /* Centraliza o conjunto imagem+texto na página se houver espaço */
         margin-bottom: 30px;
-        flex-wrap: wrap; /* Para melhor responsividade em telas pequenas */
+        /* flex-wrap: wrap; */ /* REMOVIDO para priorizar layout lado a lado */
     }
     .profile-pic-container {
-        margin-right: 20px;
-        margin-bottom: 10px; /* Espaçamento se quebrar linha */
+        margin-right: 20px; /* Espaço entre a foto e as informações */
+        /* margin-bottom: 10px; */ /* REMOVIDO pois era para o caso de 'wrap' */
     }
     .default-pic {
         width: 150px;
@@ -123,11 +121,11 @@ def local_css():
         color: #999;
     }
     .profile-info {
-        text-align: left;
+        text-align: left; /* Texto dentro da div de informações alinhado à esquerda */
+        min-width: 0; /* Ajuda a prevenir que o texto cause overflow no container flex */
     }
 
     /* Estilos para ocultar header/footer do Streamlit e ajustar paddings */
-    /* É importante testar se estes seletores continuam válidos em novas versões do Streamlit */
     div[data-testid="stHeader"],
     div[data-testid="stToolbar"],
     div[data-testid="stDecoration"],
@@ -136,14 +134,12 @@ def local_css():
         display: none !important;
         visibility: hidden !important;
     }
-    /* O footer padrão do Streamlit */
-    footer[data-testid="stFooter"] {
+    footer[data-testid="stFooter"] { /* O footer padrão do Streamlit */
         display: none !important;
         visibility: hidden !important;
     }
-    /* Ajustes de padding para remover espaços extras */
-    .st-emotion-cache-1y4p8pa { /* Seletor para o container principal do app */
-        padding-top: 1rem !important; /* Ajuste conforme necessário */
+    .st-emotion-cache-1y4p8pa { /* Seletor para o container principal do app (pode variar) */
+        padding-top: 1rem !important;
         padding-bottom: 5rem !important; /* Deixa espaço para o rodapé customizado fixo */
     }
     div[data-testid="stAppViewBlockContainer"] {
@@ -151,11 +147,11 @@ def local_css():
         padding-bottom: 0 !important;
     }
     div[data-testid="stVerticalBlock"] {
-        gap: 0.5rem !important; /* Ajuste o espaçamento entre elementos se necessário */
+        gap: 0.5rem !important;
     }
     .element-container {
         margin-top: 0 !important;
-        margin-bottom: 0.5rem !important; /* Leve margem inferior para elementos */
+        margin-bottom: 0.5rem !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -195,7 +191,7 @@ def admin_page():
         description = st.text_area("Descrição", value=profile.get("description", ""))
         profile_image = st.file_uploader("Imagem de Perfil (Recomendado: 300x300 pixels)", type=["jpg", "jpeg", "png"])
 
-        col1_img, col2_info = st.columns([1, 2])
+        col1_img, col2_info = st.columns([1, 2]) # Colunas apenas para organização no admin, não afeta frontend
         with col1_img:
             if profile.get("image"):
                 try:
@@ -203,9 +199,9 @@ def admin_page():
                     st.image(img_bytes, caption="Imagem Atual", width=150)
                 except Exception as e:
                     st.error(f"Erro ao carregar imagem: {e}")
-                    st.markdown("<div class='default-pic'><span>👤</span></div>", unsafe_allow_html=True)
+                    st.markdown("<div class='default-pic' style='width:150px; height:150px; display:flex; align-items:center; justify-content:center; background-color:#f0f0f0; border-radius:50%; font-size:50px; color:#999;'><span>👤</span></div>", unsafe_allow_html=True)
             else:
-                st.markdown("<div class='default-pic'><span>👤</span></div>", unsafe_allow_html=True)
+                st.markdown("<div class='default-pic' style='width:150px; height:150px; display:flex; align-items:center; justify-content:center; background-color:#f0f0f0; border-radius:50%; font-size:50px; color:#999;'><span>👤</span></div>", unsafe_allow_html=True)
 
 
         if st.button("Salvar Perfil"):
@@ -239,8 +235,7 @@ def admin_page():
                     if title and url:
                         if not url.startswith(("http://", "https://")):
                             url = "https://" + url
-                        
-                        # Usar timestamp para ID único para evitar problemas com len() após remoção
+
                         new_id = int(datetime.datetime.now().timestamp() * 1000)
                         new_link = {
                             "id": new_id,
@@ -252,7 +247,7 @@ def admin_page():
                         data["links"].append(new_link)
                         save_data(data)
                         st.success(f"Link '{title}' adicionado com sucesso!")
-                        st.rerun() # Rerun para limpar o form e atualizar a lista
+                        # Não precisa de st.rerun() aqui pois clear_on_submit=True e o próximo redraw atualiza
                     else:
                         st.warning("Por favor, preencha o título e a URL.")
 
@@ -261,19 +256,18 @@ def admin_page():
             if not data["links"]:
                 st.info("Nenhum link cadastrado.")
             else:
-                # Criar uma cópia para iterar e modificar com segurança
-                for i, link in enumerate(list(data["links"])):
-                    st.markdown(f"**{link['title']}** (*{link['category']}*)")
-                    st.caption(link['url'])
-                    
+                for i, link_item in enumerate(list(data["links"])): # Usar list() para cópia segura
+                    st.markdown(f"**{link_item['title']}** (*{link_item['category']}*)")
+                    st.caption(link_item['url'])
+
                     col_edit, col_remove = st.columns(2)
                     with col_edit:
-                        if st.button("Editar", key=f"edit_{link['id']}"):
-                            st.session_state["editing_link_id"] = link['id']
+                        if st.button("Editar", key=f"edit_{link_item['id']}"):
+                            st.session_state["editing_link_id"] = link_item['id']
                             st.rerun()
                     with col_remove:
-                        if st.button("Remover", key=f"remove_{link['id']}"):
-                            data["links"] = [l for l in data["links"] if l['id'] != link['id']]
+                        if st.button("Remover", key=f"remove_{link_item['id']}"):
+                            data["links"] = [l for l in data["links"] if l['id'] != link_item['id']]
                             save_data(data)
                             st.success("Link removido com sucesso!")
                             st.rerun()
@@ -286,18 +280,18 @@ def admin_page():
                 if link_to_edit:
                     st.subheader(f"Editando: {link_to_edit['title']}")
                     with st.form(key=f"edit_form_{link_id_to_edit}"):
-                        edited_title = st.text_input("Título", value=link_to_edit["title"], key=f"edit_title_{link_id_to_edit}")
-                        edited_url = st.text_input("URL", value=link_to_edit["url"], key=f"edit_url_{link_id_to_edit}")
-                        edited_icon = st.text_input("Ícone", value=link_to_edit["icon"], key=f"edit_icon_{link_id_to_edit}")
-                        edited_category = st.text_input("Categoria", value=link_to_edit["category"], key=f"edit_category_{link_id_to_edit}")
-                        
+                        edited_title = st.text_input("Título", value=link_to_edit["title"], key=f"et_{link_id_to_edit}")
+                        edited_url = st.text_input("URL", value=link_to_edit["url"], key=f"eu_{link_id_to_edit}")
+                        edited_icon = st.text_input("Ícone", value=link_to_edit["icon"], key=f"ei_{link_id_to_edit}")
+                        edited_category = st.text_input("Categoria", value=link_to_edit["category"], key=f"ec_{link_id_to_edit}")
+
                         save_button = st.form_submit_button("Salvar Alterações")
                         cancel_button = st.form_submit_button("Cancelar")
 
                         if save_button:
                             if not edited_url.startswith(("http://", "https://")):
                                 edited_url = "https://" + edited_url
-                            
+
                             link_to_edit["title"] = edited_title
                             link_to_edit["url"] = edited_url
                             link_to_edit["icon"] = edited_icon
@@ -330,62 +324,63 @@ def admin_page():
 
     elif admin_option == "Visualizar Site":
         st.session_state["page"] = "home"
+        st.query_params.clear() # Limpar query params ao ir para home
         st.rerun()
 
     if st.sidebar.button("Sair"):
         st.session_state["authenticated"] = False
         st.session_state["page"] = "home"
-        # Limpar query params se existirem ao sair do admin
-        if 'admin' in st.query_params:
-            st.query_params.clear()
+        st.query_params.clear() # Limpar query params ao sair
         st.rerun()
 
-# Renderizar ícone (Font Awesome ou URL)
+# Renderizar ícone
 def render_icon(icon_str):
     if not icon_str:
         return ""
-    if icon_str.startswith("fa-"): # Assume Font Awesome
-        # Necessário carregar Font Awesome no <head> da página, o que o Streamlit não permite nativamente de forma fácil.
-        # Alternativa: Usar st.markdown com HTML ou um componente que suporte ícones.
-        # Por simplicidade, se for FontAwesome, exibiremos o nome ou um placeholder.
-        # Para que funcione de fato, você precisaria adicionar o link do FontAwesome no HTML template do Streamlit (complexo)
-        # ou usar uma URL de imagem para o ícone.
-        return f'<i class="fas {icon_str}" title="{icon_str}"></i> ' # Adiciona espaço
+    # Para Font Awesome funcionar, o CSS do Font Awesome precisa ser carregado.
+    # Streamlit não facilita a adição de <link> tags no <head> diretamente.
+    # Uma solução seria usar st.markdown com <iframe> ou um componente customizado.
+    # Aqui, vamos apenas formatar como se o CSS estivesse disponível.
+    if icon_str.startswith("fa-"):
+        return f'<i class="fas {icon_str}" title="{icon_str}"></i>&nbsp;' # Adiciona &nbsp; para espaço
     elif icon_str.startswith(("http://", "https://")):
-        return f'<img src="{icon_str}" class="icon-img" alt="ícone"> ' # Adiciona espaço
-    else:
-        return "▫️ " # Placeholder se não for URL nem 'fa-' reconhecido, com espaço
+        return f'<img src="{icon_str}" class="icon-img" alt="ícone">&nbsp;' # Adiciona &nbsp; para espaço
+    elif icon_str: # Se houver algo, mas não for FA nem URL, mostrar como texto simples
+        return f'{st.session_state.html_escape(icon_str)}&nbsp;'
+    return ""
+
 
 # Página principal (exibição de links)
 def home_page():
-    profile = data.get("profile", {}) # Usar .get para segurança
+    profile = data.get("profile", {})
 
-    # Seção do perfil
     profile_name = profile.get("name", "Seu Nome")
     profile_description = profile.get("description", "Sua Descrição")
     profile_image_b64 = profile.get("image")
 
+    # Usar html.escape para segurança nos dados que vêm do JSON
+    esc = st.session_state.html_escape
+    
     profile_html_parts = [
         '<div class="profile-container">',
         '<div class="profile-pic-container">'
     ]
     if profile_image_b64:
         try:
-            # Validar se é uma string base64 válida (opcional, mas bom para robustez)
-            base64.b64decode(profile_image_b64)
+            base64.b64decode(profile_image_b64) # Testa se é base64 válido
             profile_html_parts.append(f'<img src="data:image/png;base64,{profile_image_b64}" class="profile-pic" alt="Foto de perfil">')
-        except Exception: # Se não for base64 válida, mostra default
+        except Exception:
             profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
     else:
         profile_html_parts.append('<div class="default-pic"><span>👤</span></div>')
 
     profile_html_parts.extend([
-        '</div>',
+        '</div>', # Fim de profile-pic-container
         '<div class="profile-info">',
-        f'<h1>{st.session_state.get("html_escape", lambda x: x)(profile_name)}</h1>', # Exemplo de escape se necessário
-        f'<p>{st.session_state.get("html_escape", lambda x: x)(profile_description)}</p>',
-        '</div>',
-        '</div>'
+        f'<h1>{esc(profile_name)}</h1>',
+        f'<p>{esc(profile_description)}</p>',
+        '</div>', # Fim de profile-info
+        '</div>'  # Fim de profile-container
     ])
     st.markdown("".join(profile_html_parts), unsafe_allow_html=True)
 
@@ -394,50 +389,44 @@ def home_page():
         st.info("Nenhum link adicionado ainda. Entre no painel administrativo para adicionar links.")
     else:
         categories = {}
-        for link in data["links"]:
-            category = link.get("category", "Outros") # .get para segurança
+        for link_item in data["links"]:
+            category = link_item.get("category", "Outros")
             if category not in categories:
                 categories[category] = []
-            categories[category].append(link)
+            categories[category].append(link_item)
 
         for category_name, links_in_category in categories.items():
-            st.markdown(f"<h3 class='category-header'>{st.session_state.get('html_escape', lambda x: x)(category_name)}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 class='category-header'>{esc(category_name)}</h3>", unsafe_allow_html=True)
 
-            # Criar colunas dinamicamente, até 2 por linha
             num_links = len(links_in_category)
-            cols = st.columns(2) if num_links > 1 else st.columns(1)
-            
-            for i, link in enumerate(links_in_category):
-                with cols[i % 2 if num_links > 1 else 0]:
-                    icon_html = render_icon(link.get("icon", ""))
-                    link_title = st.session_state.get('html_escape', lambda x: x)(link.get("title", "Link"))
-                    link_url = link.get("url", "#")
-                    
+            cols = st.columns(2) if num_links >= 1 else st.columns(1) # Sempre usa 2 colunas se houver links
+
+            for i, link_item in enumerate(links_in_category):
+                current_col = cols[i % 2]
+                with current_col:
+                    icon_html = render_icon(link_item.get("icon", ""))
+                    link_title = esc(link_item.get("title", "Link"))
+                    link_url = link_item.get("url", "#")
+
                     st.markdown(f"""
                     <a href="{link_url}" target="_blank" class="link-card">
                         {icon_html}{link_title}
                     </a>
                     """, unsafe_allow_html=True)
-    
-    # Botão Admin na página principal (opcional, pode ser só via URL)
+
     if st.button("Admin", key="home_admin_btn"):
         st.session_state["page"] = "admin_login"
-        st.query_params.from_dict({"admin": ["true"]}) # Adiciona query param ao clicar
+        st.query_params["admin"] = "true" # Define o query param
         st.rerun()
 
 # --- Inicialização e Controle de Fluxo ---
-if "html_escape" not in st.session_state: # Adiciona uma função de escape simples para exemplo
-    import html
+if "html_escape" not in st.session_state:
     st.session_state.html_escape = html.escape
 
-
-# Carregar dados no início
 data = load_data()
 
-# Configurar sessão (após carregar dados, caso afete estado inicial)
 if "page" not in st.session_state:
-    # Verificar query params para direcionamento inicial
-    if st.query_params.get("admin") == ["true"]:
+    if st.query_params.get("admin") == "true":
         st.session_state["page"] = "admin_login"
     else:
         st.session_state["page"] = "home"
@@ -445,48 +434,45 @@ if "page" not in st.session_state:
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
-# Aplicar CSS personalizado
 local_css()
 
-# Controle de navegação
 current_page = st.session_state.get("page", "home")
 
 if current_page == "admin_login":
-    admin_login()
+    if st.session_state.get("authenticated"): # Se já autenticado e na pág de login, vai pro admin
+        st.session_state["page"] = "admin"
+        st.rerun()
+    else:
+        admin_login()
 elif current_page == "admin" and st.session_state.get("authenticated"):
     admin_page()
-else: # Inclui "home" ou qualquer estado inválido/não autenticado para admin
-    if current_page != "home": # Se estava tentando acessar admin sem auth, volta pra home
+else:
+    if current_page != "home":
         st.session_state["page"] = "home"
-        # Limpar query params se estava tentando acessar admin e falhou
-        if 'admin' in st.query_params:
-            st.query_params.clear()
-        st.rerun() # Garante que home_page() seja chamada com estado limpo
+        if "admin" in st.query_params: # Limpa query param se não for para admin/admin_login
+           del st.query_params["admin"]
+        st.rerun()
     home_page()
 
 
 # --- Rodapé Customizado ---
-# Função para obter o IP público (com timeout e tratamento de erro)
 def get_public_ip():
     try:
-        response = requests.get('https://api.ipify.org', timeout=2) # Timeout menor
-        response.raise_for_status() # Verifica erros HTTP
+        response = requests.get('https://api.ipify.org', timeout=3)
+        response.raise_for_status()
         return response.text
     except requests.exceptions.RequestException:
         return "IP indisponível"
 
-# Função para obter data e hora formatadas
 def obter_data_formatada():
     try:
         agora = datetime.datetime.now()
-        # Formatando dias da semana e meses em português (exemplo simples)
         dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
         dia_semana = dias[agora.weekday()]
         return f"{dia_semana}, {agora.strftime('%d/%m/%Y às %H:%M:%S')}"
     except Exception:
         return "Data/hora indisponível"
 
-# Montar e exibir o rodapé
 ip_publico = get_public_ip()
 data_hora = obter_data_formatada()
 
@@ -495,23 +481,22 @@ footer_html = f"""
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: #ffffff; /* Mesma cor de fundo do app */
-            color: #333333; /* Cor do texto do app */
+            background-color: #ffffff;
+            color: #333333;
             text-align: center;
-            padding: 8px 0; /* Ajuste o padding vertical */
-            font-size: 14px; /* Tamanho de fonte menor */
-            border-top: 1px solid #eee; /* Linha sutil no topo */
-            z-index: 1000; /* Para garantir que fique sobre outros elementos */
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05); /* Sombra sutil */
+            padding: 8px 0;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            z-index: 1000;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
             ">
-    💻 IP: {ip_publico} &nbsp;&nbsp;|&nbsp;&nbsp; ⏰ {data_hora}
+    💻 IP: {st.session_state.html_escape(ip_publico)} &nbsp;&nbsp;|&nbsp;&nbsp; ⏰ {st.session_state.html_escape(data_hora)}
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
 
-# Rodapé do LinkPortfolio (aparecerá acima do rodapé de IP/Data)
 st.markdown("""
-<div style="text-align:center; margin-top:30px; margin-bottom: 70px; /* Espaço para o rodapé fixo */ padding:10px; color:#555; font-size:14px;">
+<div style="text-align:center; margin-top:30px; margin-bottom: 70px; padding:10px; color:#555; font-size:14px;">
     <hr style="border-top: 1px solid #eee; margin-bottom: 10px;">
     🔗 <strong>LinkPortfolio</strong> | Um web app para organizar seu portfólio c/ links,<br>
             contatos, aplicativos e projetos. Por <strong>Ary Ribeiro</strong>.
