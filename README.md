@@ -1,3 +1,6 @@
+Obs.: caso o app esteja no modo "sleeping" (dormindo) ao entrar, basta clicar no botão que estará disponível e aguardar, para ativar o mesmo. 
+![print app](https://github.com/user-attachments/assets/90073553-3d6d-4710-9ee0-6e51d0888e8e)
+
 # LinkPortfolio 🔗
 
 LinkPortfolio é uma aplicação web simples e elegante, construída em Python e Streamlit, que permite aos usuários criar e gerenciar uma página de portfólio pessoal com seus links importantes, informações de perfil e contatos. Possui um painel administrativo para fácil customização.
