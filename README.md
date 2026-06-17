@@ -1,4 +1,5 @@
-# LinkPortfolio
+# LinkPortfólio
+<img width="840" height="685" alt="image" src="https://github.com/user-attachments/assets/63d42a2c-0f8b-4565-bed7-e4d83b866246" />
 
 Aplicação web moderna para organizar e exibir seu portfólio de links, projetos, redes sociais e contatos em uma única página personalizada. Inspirado no Linktree, mas com controle total, painel administrativo e deploy gratuito na Vercel.
 
