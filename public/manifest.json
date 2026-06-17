@@ -1,6 +1,6 @@
 {
-  "name": "LinkPortfolio",
-  "short_name": "LinkPortfolio",
+  "name": "LinkPortfólio",
+  "short_name": "LinkPortfólio",
   "description": "Portfólio de links, projetos e contatos",
   "start_url": "/",
   "display": "standalone",

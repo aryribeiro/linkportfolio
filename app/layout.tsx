@@ -6,11 +6,11 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LinkPortfolio | Ary Ribeiro",
+  title: "LinkPortfólio | Ary Ribeiro",
   description:
     "Portfólio de links, projetos, redes sociais e contatos de Ary Ribeiro.",
   openGraph: {
-    title: "LinkPortfolio | Ary Ribeiro",
+    title: "LinkPortfólio | Ary Ribeiro",
     description:
       "Portfólio de links, projetos, redes sociais e contatos de Ary Ribeiro.",
     type: "website",

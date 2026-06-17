@@ -8,7 +8,7 @@ export function ShareButton() {
   const handleShare = async () => {
     const url = window.location.href;
     const shareData = {
-      title: "LinkPortfolio",
+      title: "LinkPortfólio",
       text: "Confira meu portfólio de links!",
       url,
     };

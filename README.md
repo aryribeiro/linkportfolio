@@ -13,20 +13,23 @@ Aplicação web moderna para organizar e exibir seu portfólio de links, projeto
 ## Funcionalidades
 
 **Página Pública**
-- Perfil com foto, nome e bio
-- Links agrupados por categorias em grid responsivo (1/2/3 colunas)
+- Perfil com foto (selecionável do repositório), nome e bio
+- Links agrupados por categorias em grid responsivo (2 colunas)
 - Dark mode com toggle e persistência
 - Busca instantânea de links (sem reload)
 - Animações suaves (Framer Motion)
 - Botão de compartilhamento (Web Share API + fallback clipboard)
-- Footer com data/hora em tempo real (pt-BR)
+- Footer com data/hora em tempo real (pt-BR) + IP público do visitante
 - PWA-ready (manifest.json)
 
 **Painel Administrativo**
 - Protegido por senha (bcrypt + JWT)
-- CRUD completo de links com upload de ícone (base64, 64x64px)
+- CRUD completo de links com menu suspenso de ícones (emojis, ícones locais, ícones do JSON)
+- Dropdown de categorias predefinidas + customizáveis via JSON
 - Drag & drop para reordenar links
-- Edição de perfil (nome, descrição, foto 300x300px)
+- Seletor de foto de perfil da pasta `/public/foto/`
+- Botão **Download JSON** (exporta config completa para backup/Google Drive)
+- Botão **Reload Drive** (força recarregamento do JSON do Google Drive)
 - Gerador de QR Code da página
 - Preview do site público
 
@@ -34,7 +37,7 @@ Aplicação web moderna para organizar e exibir seu portfólio de links, projeto
 - Cache em memória com TTL + stale-while-revalidate
 - Rate limiting na autenticação (5 tentativas/min)
 - Validação com Zod em todas as API routes
-- Headers de segurança (HSTS, CSP, X-Frame-Options)
+- Headers de segurança (HSTS, X-Frame-Options, X-Content-Type-Options)
 - Senha exclusivamente via variável de ambiente (nunca no código)
 - Region otimizada para Brasil (GRU)
 
@@ -61,53 +64,74 @@ Aplicação web moderna para organizar e exibir seu portfólio de links, projeto
 
 ### 1. Preparar o JSON de dados
 
-Crie um arquivo `links_data.json` com a estrutura:
+Crie um arquivo `links_data.json` com a seguinte estrutura:
 
 ```json
 {
   "profile": {
     "name": "Seu Nome",
     "description": "Sua bio aqui",
-    "image": null
+    "photo": "/foto/foto_perfil.jpg"
   },
+  "categories": [
+    "Aplicativos & Projetos",
+    "Redes Sociais e Sites",
+    "Contato"
+  ],
   "links": [
     {
-      "id": 1,
+      "id": 1747415094744,
       "title": "Meu Projeto",
       "url": "https://exemplo.com",
-      "icon": "fa-code",
-      "category": "Projetos",
-      "clicks": 0
+      "icon": "/icones/appicon.png",
+      "category": "Aplicativos & Projetos"
     }
   ]
 }
 ```
 
-Faça upload no Google Drive, defina compartilhamento como **"Qualquer pessoa com o link"** e converta o link para download direto:
+**Campos importantes:**
+- `profile.photo` — caminho para a foto na pasta `/public/foto/` do repositório
+- `categories` — lista de categorias que aparecerão no dropdown do admin
+- `links[].icon` — caminho para ícone em `/public/icones/`, emoji, ou URL externa
 
-```
-https://drive.google.com/uc?export=download&id=SEU_FILE_ID
-```
+**Upload para Google Drive:**
+1. Faça upload do `links_data.json` no Google Drive
+2. Clique com botão direito → Compartilhar → **"Qualquer pessoa com o link"**
+3. Copie o ID do arquivo da URL (entre `/d/` e `/view`)
+4. Monte o link direto: `https://drive.google.com/uc?export=download&id=SEU_FILE_ID`
 
-### 2. Importar no Vercel
+### 2. Preparar o Repositório
+
+1. Faça fork ou clone deste repositório
+2. Coloque sua(s) foto(s) de perfil em `public/foto/`
+3. Coloque ícones personalizados em `public/icones/`
+4. Faça commit e push
+
+### 3. Importar no Vercel
 
 1. Acesse [vercel.com/new](https://vercel.com/new)
-2. Importe o repositório `aryribeiro/linkportfolio`
+2. Importe seu repositório
 3. Framework: **Next.js** (detectado automaticamente)
 
-### 3. Configurar Variáveis de Ambiente
+### 4. Configurar Variáveis de Ambiente
 
 No painel da Vercel, em **Settings → Environment Variables**, adicione:
 
-| Variável | Valor |
-|----------|-------|
-| `ADMIN_PASSWORD` | Sua senha do painel admin |
-| `GOOGLE_DRIVE_JSON_URL` | URL direta do JSON no Google Drive |
-| `JWT_SECRET` | String aleatória com 32+ caracteres |
-| `CACHE_TTL_SECONDS` | `300` (opcional, padrão 5 min) |
-| `NEXT_PUBLIC_SITE_URL` | URL do seu site na Vercel |
+| Variável | Obrigatória | Descrição |
+|----------|:-----------:|-----------|
+| `ADMIN_PASSWORD` | Sim | Senha do painel admin (texto puro, hash gerado em runtime) |
+| `GOOGLE_DRIVE_JSON_URL` | Sim | URL direta do JSON no Google Drive |
+| `JWT_SECRET` | Sim | String aleatória com 32+ caracteres |
+| `CACHE_TTL_SECONDS` | Não | Tempo do cache em segundos (padrão: 300 = 5 min) |
+| `NEXT_PUBLIC_SITE_URL` | Não | URL pública do site (para OG tags e QR Code) |
 
-### 4. Deploy
+**Gerar JWT_SECRET pelo terminal:**
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+### 5. Deploy
 
 Clique em **Deploy**. Pronto.
 
@@ -122,21 +146,57 @@ Navegue para `https://seu-site.vercel.app/admin/login` e entre com a senha defin
 ### Gerenciar links
 
 1. Na aba **Links**, clique em **+ Novo Link**
-2. Preencha título, URL e categoria
-3. Para ícone: faça upload de imagem (convertida para base64) ou digite uma classe Font Awesome (`fa-github`, `fa-youtube`, etc.)
-4. Arraste para reordenar
-5. Clique em **Salvar Ordem**
+2. Preencha título e URL
+3. Selecione a **categoria** no dropdown
+4. Selecione o **ícone** no menu suspenso:
+   - **Emojis** — Hiperlink (🔗), Telegram (📩), E-mail (📧), Globo (🌐), Vídeo (🎬), Código (💻), Educação (🎓)
+   - **Ícones do Repositório** — imagens da pasta `/public/icones/`
+   - **Ícones do JSON** — ícones customizados definidos no campo `customIcons` do JSON
+5. Arraste os itens para **reordenar**
+6. Clique em **Salvar Ordem**
 
 ### Editar perfil
 
-1. Na aba **Perfil**, altere nome e descrição
-2. Faça upload da foto (recortada automaticamente para 300x300px)
+1. Na aba **Perfil**, selecione a foto no dropdown (vem da pasta `public/foto/`)
+2. Altere nome e descrição
 3. Clique em **Salvar Perfil**
+
+### Exportar / Backup
+
+- Clique em **⬇ Download JSON** para baixar todas as configurações atuais
+- Faça upload desse arquivo no Google Drive para persistir as alterações
+
+### Recarregar dados do Google Drive
+
+- Clique em **⟳ Reload Drive** para forçar o recarregamento do JSON (útil após editar o arquivo diretamente no Drive)
 
 ### Compartilhar
 
 - Use o botão de share no canto superior direito da página pública
 - Ou acesse a aba **QR Code** no admin para gerar/imprimir o QR
+
+---
+
+## Personalização de Ícones
+
+### Adicionar ícones ao repositório
+
+Coloque imagens PNG na pasta `public/icones/` e elas aparecerão automaticamente no menu suspenso do admin (após atualizar a lista em `components/admin/AdminLinks.tsx`).
+
+### Ícones via JSON (sem alterar código)
+
+Adicione ao seu `links_data.json` no Google Drive:
+
+```json
+{
+  "customIcons": [
+    { "name": "Meu App", "url": "https://exemplo.com/icone.png" },
+    { "name": "Outro Serviço", "url": "https://exemplo.com/outro.png" }
+  ]
+}
+```
+
+Esses ícones aparecerão na seção **"Meus Ícones (JSON)"** do menu suspenso.
 
 ---
 
@@ -166,24 +226,45 @@ Acesse `http://localhost:3000`
 ```
 ├── app/
 │   ├── page.tsx                 → Página pública
+│   ├── layout.tsx               → Layout raiz (fonts, meta, PWA)
+│   ├── globals.css              → Tailwind + CSS variables (dark mode)
 │   ├── admin/
 │   │   ├── login/page.tsx       → Login admin
-│   │   └── page.tsx             → Dashboard admin
+│   │   └── page.tsx             → Dashboard admin (Links, Perfil, QR)
 │   └── api/
-│       ├── auth/route.ts        → Autenticação
-│       ├── links/route.ts       → CRUD links
+│       ├── auth/route.ts        → Autenticação (bcrypt + JWT + rate limit)
+│       ├── links/route.ts       → GET/PUT links
 │       ├── links/click/route.ts → Analytics de cliques
-│       ├── profile/route.ts     → Atualizar perfil
-│       └── revalidate/route.ts  → Limpar cache
-├── components/                  → Componentes React
+│       ├── profile/route.ts     → PUT perfil
+│       └── revalidate/route.ts  → Invalidar cache
+├── components/
+│   ├── ProfileCard.tsx          → Foto + nome + bio
+│   ├── LinkCard.tsx             → Card animado de link
+│   ├── CategorySection.tsx      → Seção por categoria (grid 2 colunas)
+│   ├── IconRenderer.tsx         → Renderiza emoji / path / URL / FA
+│   ├── SearchBar.tsx            → Filtro instantâneo
+│   ├── Footer.tsx               → Data/hora + IP público do visitante
+│   ├── ThemeProvider.tsx        → Context dark mode
+│   ├── ThemeToggle.tsx          → Botão sol/lua
+│   ├── ShareButton.tsx          → Web Share API
+│   ├── QRCode.tsx               → Canvas QR
+│   ├── AdminButton.tsx          → Link para /admin
+│   └── admin/
+│       ├── AdminLinks.tsx       → CRUD + DnD + icon picker + category dropdown
+│       ├── AdminProfile.tsx     → Editor de perfil + photo picker
+│       └── AdminQRCode.tsx      → Gerador de QR
 ├── lib/
 │   ├── auth.ts                  → bcrypt + JWT
-│   ├── cache.ts                 → Cache em memória (TTL)
-│   ├── db.ts                    → Fetch Google Drive
+│   ├── cache.ts                 → Cache em memória (TTL + stale)
+│   ├── db.ts                    → Fetch Google Drive + cache
 │   └── types.ts                 → Interfaces TypeScript
-├── public/icones/               → Ícones estáticos
+├── public/
+│   ├── foto/                    → Fotos de perfil do usuário
+│   ├── icones/                  → Ícones dos links
+│   └── manifest.json            → PWA manifest
 ├── middleware.ts                → Proteção de rotas /admin
-└── vercel.json                  → Config de deploy (região GRU)
+├── vercel.json                  → Deploy config (região GRU, headers)
+└── links_data.json              → Dados de exemplo (upload pro Google Drive)
 ```
 
 ---
@@ -192,9 +273,10 @@ Acesse `http://localhost:3000`
 
 | Formato | Exemplo | Comportamento |
 |---------|---------|--------------|
-| Font Awesome | `fa-github` | Renderiza como `<i class="fas fa-github">` |
-| Base64 (upload) | `data:image/png;base64,...` | Renderiza como `<img>` 64x64px |
+| Caminho local | `/icones/appicon.png` | Renderiza como `<img>` do repositório |
+| Emoji | `🔗`, `📩`, `🌐` | Renderiza como texto (emoji nativo) |
 | URL externa | `https://...icon.png` | Renderiza como `<img>` (compatibilidade) |
+| Font Awesome | `fa-github` | Renderiza como `<i class="fas fa-github">` |
 
 ---
 
