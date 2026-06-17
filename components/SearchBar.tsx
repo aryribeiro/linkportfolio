@@ -32,8 +32,8 @@ export function SearchBar() {
   };
 
   return (
-    <div className="mb-8">
-      <div className="relative">
+    <div className="mb-8 flex justify-end">
+      <div className="relative w-[70%]">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]"
           fill="none"
@@ -53,8 +53,8 @@ export function SearchBar() {
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Buscar links..."
           aria-label="Buscar links"
-          className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)]
-                     text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]
+          className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)]
+                     text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      transition-all"
         />

@@ -37,7 +37,7 @@ export async function PUT(request: NextRequest) {
     currentData.profile = parsed.data;
 
     const cache = getCache<AppData>();
-    cache.set(currentData);
+    cache.set(currentData, true);
 
     return NextResponse.json({ success: true });
   } catch {

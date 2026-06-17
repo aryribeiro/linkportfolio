@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchAppData, invalidateCache } from "@/lib/db";
+import { fetchAppData } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 import { z } from "zod";
 
@@ -51,11 +51,9 @@ export async function PUT(request: NextRequest) {
     const currentData = await fetchAppData();
     currentData.links = parsed.data.links;
 
-    // In a full implementation, this would write back to Google Drive or a DB.
-    // For now, we update the in-memory cache so the change is reflected immediately.
     const { getCache } = await import("@/lib/cache");
     const cache = getCache();
-    cache.set(currentData);
+    cache.set(currentData, true);
 
     return NextResponse.json({ success: true });
   } catch {

@@ -5,6 +5,7 @@ const DEFAULT_TTL = 300;
 class MemoryCache<T> {
   private entry: CacheEntry<T> | null = null;
   private ttlSeconds: number;
+  private pinned = false;
 
   constructor() {
     this.ttlSeconds = parseInt(process.env.CACHE_TTL_SECONDS || "", 10) || DEFAULT_TTL;
@@ -14,6 +15,11 @@ class MemoryCache<T> {
     if (!this.entry) {
       console.log("[cache] MISS — no entry");
       return null;
+    }
+
+    if (this.pinned) {
+      console.log("[cache] HIT — pinned (admin edit)");
+      return this.entry.data;
     }
 
     const age = (Date.now() - this.entry.timestamp) / 1000;
@@ -34,16 +40,18 @@ class MemoryCache<T> {
     return this.entry.data;
   }
 
-  set(data: T): void {
+  set(data: T, pin = false): void {
     this.entry = {
       data,
       timestamp: Date.now(),
       valid: true,
     };
-    console.log("[cache] SET — data cached");
+    if (pin) this.pinned = true;
+    console.log(`[cache] SET — data cached${pin ? " (pinned)" : ""}`);
   }
 
   invalidate(): void {
+    this.pinned = false;
     if (this.entry) {
       this.entry.valid = false;
       this.entry.timestamp = 0;
