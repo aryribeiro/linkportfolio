@@ -1,0 +1,121 @@
+{
+  "profile": {
+    "name": "Ary Ribeiro",
+    "description": "6x AWS | Python | Mestrando em Educação TIC | Pós-graduado em IA | MBA em Governança de TI | Gestor de TI | Técnico em TI | Empreteco | Jornalista Digital | Empreendedor Social | Home Office",
+    "image": null
+  },
+  "links": [
+    {
+      "id": 1747398120000,
+      "title": "Ponto Digital",
+      "url": "https://pontodigital.streamlit.app/",
+      "icon": "fa-clock",
+      "category": "Aplicativos & Projetos",
+      "clicks": 0
+    },
+    {
+      "id": 1747398180000,
+      "title": "Help Web App",
+      "url": "https://duvidas.streamlit.app/",
+      "icon": "fa-question-circle",
+      "category": "Aplicativos & Projetos",
+      "clicks": 0
+    },
+    {
+      "id": 1747398240000,
+      "title": "Quiz App AI",
+      "url": "https://quiz-app-ai.streamlit.app/",
+      "icon": "fa-brain",
+      "category": "Aplicativos & Projetos",
+      "clicks": 0
+    },
+    {
+      "id": 1747398300000,
+      "title": "AWS Simulator",
+      "url": "https://awssimulator.streamlit.app/",
+      "icon": "fa-cloud",
+      "category": "Aplicativos & Projetos",
+      "clicks": 0
+    },
+    {
+      "id": 1747398360000,
+      "title": "GitApp",
+      "url": "https://gitapp.streamlit.app/",
+      "icon": "fa-code-branch",
+      "category": "Aplicativos & Projetos",
+      "clicks": 0
+    },
+    {
+      "id": 1747398420000,
+      "title": "AWS MindMap Pro",
+      "url": "https://awsmind.streamlit.app/",
+      "icon": "fa-project-diagram",
+      "category": "Aplicativos & Projetos",
+      "clicks": 0
+    },
+    {
+      "id": 1747398480000,
+      "title": "Instagram",
+      "url": "https://instagram.com/aryribeiro",
+      "icon": "fa-instagram",
+      "category": "Redes Sociais e Sites",
+      "clicks": 0
+    },
+    {
+      "id": 1747398540000,
+      "title": "LinkedIn",
+      "url": "https://linkedin.com/in/aryribeiro",
+      "icon": "fa-linkedin",
+      "category": "Redes Sociais e Sites",
+      "clicks": 0
+    },
+    {
+      "id": 1747398600000,
+      "title": "GitHub",
+      "url": "https://github.com/aryribeiro",
+      "icon": "fa-github",
+      "category": "Redes Sociais e Sites",
+      "clicks": 0
+    },
+    {
+      "id": 1747398660000,
+      "title": "YouTube",
+      "url": "https://youtube.com/@aryribeiro",
+      "icon": "fa-youtube",
+      "category": "Redes Sociais e Sites",
+      "clicks": 0
+    },
+    {
+      "id": 1747398720000,
+      "title": "E-mail",
+      "url": "mailto:aryribeiro@gmail.com",
+      "icon": "fa-envelope",
+      "category": "Contato",
+      "clicks": 0
+    },
+    {
+      "id": 1747398780000,
+      "title": "WhatsApp",
+      "url": "https://wa.me/5500000000000",
+      "icon": "fa-whatsapp",
+      "category": "Contato",
+      "clicks": 0
+    },
+    {
+      "id": 1747398840000,
+      "title": "AWS: 12 instâncias EC2+ASG+ALB",
+      "url": "https://youtu.be/snQuYvEOqa8",
+      "icon": "fa-play-circle",
+      "category": "Videoaulas e Hands on AWS",
+      "clicks": 0
+    },
+    {
+      "id": 1747398900000,
+      "title": "WordPress na AWS c/ Alto Desempenho",
+      "url": "https://youtu.be/hSKTYRnx-ZI",
+      "icon": "fa-play-circle",
+      "category": "Videoaulas e Hands on AWS",
+      "clicks": 0
+    }
+  ]
+}
