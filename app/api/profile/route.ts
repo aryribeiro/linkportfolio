@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
     };
 
     const cache = getCache<AppData>();
-    cache.set(appData, true);
+    cache.set(appData);
 
     return NextResponse.json({ success: true, data: appData });
   } catch {

@@ -109,8 +109,20 @@ export default function AdminPage() {
 
   const handleReloadFromDrive = async () => {
     setReloading(true);
-    await fetch("/api/revalidate", { method: "POST" });
-    await fetchData();
+    try {
+      const res = await fetch("/api/revalidate", { method: "POST" });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setData(result.data);
+          localStorage.setItem("linkportfolio_data", JSON.stringify(result.data));
+        }
+      } else {
+        await fetchData();
+      }
+    } catch {
+      await fetchData();
+    }
     setReloading(false);
   };
 

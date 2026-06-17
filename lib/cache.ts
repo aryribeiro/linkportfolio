@@ -1,68 +1,43 @@
 import { CacheEntry } from "./types";
 
-const DEFAULT_TTL = 300;
+const DEFAULT_TTL = 60;
 
 class MemoryCache<T> {
   private entry: CacheEntry<T> | null = null;
   private ttlSeconds: number;
-  private pinned = false;
 
   constructor() {
     this.ttlSeconds = parseInt(process.env.CACHE_TTL_SECONDS || "", 10) || DEFAULT_TTL;
   }
 
   get(): T | null {
-    if (!this.entry) {
-      console.log("[cache] MISS — no entry");
-      return null;
-    }
-
-    if (this.pinned) {
-      console.log("[cache] HIT — pinned (admin edit)");
-      return this.entry.data;
-    }
+    if (!this.entry) return null;
 
     const age = (Date.now() - this.entry.timestamp) / 1000;
 
     if (age < this.ttlSeconds) {
-      console.log(`[cache] HIT — age: ${Math.round(age)}s / ttl: ${this.ttlSeconds}s`);
       return this.entry.data;
     }
 
-    console.log(`[cache] EXPIRED — age: ${Math.round(age)}s / ttl: ${this.ttlSeconds}s`);
     this.entry.valid = false;
     return null;
   }
 
   getStale(): T | null {
     if (!this.entry) return null;
-    console.log("[cache] STALE — returning expired data as fallback");
     return this.entry.data;
   }
 
-  set(data: T, pin = false): void {
+  set(data: T): void {
     this.entry = {
       data,
       timestamp: Date.now(),
       valid: true,
     };
-    if (pin) this.pinned = true;
-    console.log(`[cache] SET — data cached${pin ? " (pinned)" : ""}`);
   }
 
   invalidate(): void {
-    this.pinned = false;
-    if (this.entry) {
-      this.entry.valid = false;
-      this.entry.timestamp = 0;
-    }
-    console.log("[cache] INVALIDATED");
-  }
-
-  isValid(): boolean {
-    if (!this.entry) return false;
-    const age = (Date.now() - this.entry.timestamp) / 1000;
-    return age < this.ttlSeconds;
+    this.entry = null;
   }
 }
 
