@@ -49,6 +49,7 @@ const DEFAULT_CATEGORIES = [
   "Contato",
   "Videoaulas e Hands on AWS",
   "Educação",
+  "Currículo",
   "Outros",
 ];
 
