@@ -38,7 +38,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="min-h-screen pb-24">
+    <main className="min-h-screen pb-32">
       <div className="fixed top-4 right-4 z-50 flex gap-2">
         <ThemeToggle />
         <ShareButton />
