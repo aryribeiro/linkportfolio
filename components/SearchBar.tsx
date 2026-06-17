@@ -33,7 +33,7 @@ export function SearchBar() {
 
   return (
     <div className="mb-8 flex justify-end">
-      <div className="relative w-[70%]">
+      <div className="relative w-[30%]">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]"
           fill="none"

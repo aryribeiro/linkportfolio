@@ -45,7 +45,7 @@ export default async function HomePage() {
         <AdminButton />
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-12 mt-4 mb-8 border-2 border-[#1a2e4a] rounded-2xl py-8">
+      <div className="max-w-2xl mx-auto px-4 pt-12 mt-4 mb-8 border-4 border-[#1a2e4a] rounded-2xl py-8">
         <ProfileCard profile={data.profile} />
 
         <SearchBar />

@@ -49,7 +49,6 @@ export default function AdminPage() {
     });
     if (res.ok) {
       await fetchData();
-      await fetch("/api/revalidate", { method: "POST" });
     }
     return res.ok;
   };
@@ -62,7 +61,6 @@ export default function AdminPage() {
     });
     if (res.ok) {
       await fetchData();
-      await fetch("/api/revalidate", { method: "POST" });
     }
     return res.ok;
   };
