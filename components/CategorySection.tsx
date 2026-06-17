@@ -20,7 +20,7 @@ export function CategorySection({ category, links }: CategorySectionProps) {
       <h2 className="text-lg font-semibold text-[var(--text-primary)] border-b border-[var(--border-color)] pb-2 mb-4">
         {category}
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {links.map((link, i) => (
           <LinkCard key={link.id} link={link} index={i} />
         ))}

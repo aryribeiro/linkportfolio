@@ -35,7 +35,7 @@ const LOCAL_ICONS = [
 
 const EMOJI_ICONS = [
   { name: "Hiperlink", value: "🔗" },
-  { name: "Telegram", value: "✈️" },
+  { name: "Telegram / Enviar", value: "📩" },
   { name: "E-mail", value: "📧" },
   { name: "Globo (Site)", value: "🌐" },
   { name: "Vídeo", value: "🎬" },
