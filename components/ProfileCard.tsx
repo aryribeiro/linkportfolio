@@ -13,7 +13,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col sm:flex-row items-center gap-5 mb-10"
+      className="flex flex-col sm:flex-row items-center gap-5 mb-4"
     >
       <div className="flex-shrink-0">
         <img
