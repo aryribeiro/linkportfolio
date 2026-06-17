@@ -133,7 +133,7 @@ export default function AdminPage() {
 
       <div className="max-w-4xl mx-auto px-4 mt-6">
         {activeTab === "links" && (
-          <AdminLinks links={data.links} onUpdate={handleLinksUpdate} />
+          <AdminLinks links={data.links} customIcons={data.customIcons} onUpdate={handleLinksUpdate} />
         )}
         {activeTab === "profile" && (
           <AdminProfile profile={data.profile} onUpdate={handleProfileUpdate} />

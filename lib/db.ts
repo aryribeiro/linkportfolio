@@ -40,6 +40,12 @@ export async function fetchAppData(): Promise<AppData> {
             clicks: link.clicks || 0,
           }))
         : [],
+      customIcons: Array.isArray(raw.customIcons)
+        ? raw.customIcons.map((icon: Record<string, unknown>) => ({
+            name: icon.name || "",
+            url: icon.url || "",
+          }))
+        : [],
     };
 
     cache.set(data);

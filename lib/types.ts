@@ -13,9 +13,15 @@ export interface Profile {
   image: string | null;
 }
 
+export interface CustomIcon {
+  name: string;
+  url: string;
+}
+
 export interface AppData {
   profile: Profile;
   links: Link[];
+  customIcons?: CustomIcon[];
 }
 
 export interface CacheEntry<T> {

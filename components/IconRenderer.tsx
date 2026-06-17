@@ -12,7 +12,7 @@ export function IconRenderer({ icon, size = 24 }: IconRendererProps) {
     );
   }
 
-  if (icon.startsWith("data:image/")) {
+  if (icon.startsWith("data:image/") || icon.startsWith("/icones/")) {
     return (
       <img
         src={icon}
