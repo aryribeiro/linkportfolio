@@ -35,11 +35,11 @@ export function LinkCard({ link, index }: LinkCardProps) {
       data-title={link.title.toLowerCase()}
       data-category={link.category.toLowerCase()}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-3">
         <div className="flex-shrink-0">
           <IconRenderer icon={link.icon} size={28} />
         </div>
-        <span className="font-medium text-[var(--text-primary)] truncate">
+        <span className="font-medium text-[var(--text-primary)] text-center break-words">
           {link.title}
         </span>
       </div>
