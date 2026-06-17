@@ -21,7 +21,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Ícones locais da pasta /public/icones/
 const LOCAL_ICONS = [
   { name: "Aplicativo (geral)", path: "/icones/appicon.png" },
   { name: "Direto Notícias", path: "/icones/dnicon.png" },
@@ -34,9 +33,29 @@ const LOCAL_ICONS = [
   { name: "Credly", path: "/icones/credly.png" },
 ];
 
+const EMOJI_ICONS = [
+  { name: "Hiperlink", value: "🔗" },
+  { name: "Telegram", value: "✈️" },
+  { name: "E-mail", value: "📧" },
+  { name: "Globo (Site)", value: "🌐" },
+  { name: "Vídeo", value: "🎬" },
+  { name: "Código", value: "💻" },
+  { name: "Educação", value: "🎓" },
+];
+
+const DEFAULT_CATEGORIES = [
+  "Aplicativos & Projetos",
+  "Redes Sociais e Sites",
+  "Contato",
+  "Videoaulas e Hands on AWS",
+  "Educação",
+  "Outros",
+];
+
 interface AdminLinksProps {
   links: Link[];
   customIcons?: CustomIcon[];
+  categories?: string[];
   onUpdate: (links: Link[]) => Promise<boolean>;
 }
 
@@ -94,12 +113,14 @@ function SortableItem({ link, onEdit, onRemove }: { link: Link; onEdit: () => vo
   );
 }
 
-export function AdminLinks({ links, customIcons = [], onUpdate }: AdminLinksProps) {
+export function AdminLinks({ links, customIcons = [], categories = [], onUpdate }: AdminLinksProps) {
   const [localLinks, setLocalLinks] = useState<Link[]>(links);
   const [editing, setEditing] = useState<Link | null>(null);
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  const allCategories = [...new Set([...DEFAULT_CATEGORIES, ...categories])];
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -171,6 +192,7 @@ export function AdminLinks({ links, customIcons = [], onUpdate }: AdminLinksProp
         <LinkForm
           link={editing}
           customIcons={customIcons}
+          categories={allCategories}
           onSave={handleAddOrEdit}
           onCancel={() => { setAdding(false); setEditing(null); }}
         />
@@ -197,18 +219,20 @@ export function AdminLinks({ links, customIcons = [], onUpdate }: AdminLinksProp
 function LinkForm({
   link,
   customIcons,
+  categories,
   onSave,
   onCancel,
 }: {
   link: Link | null;
   customIcons: CustomIcon[];
+  categories: string[];
   onSave: (link: Link) => void;
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState(link?.title || "");
   const [url, setUrl] = useState(link?.url || "");
   const [icon, setIcon] = useState(link?.icon || "");
-  const [category, setCategory] = useState(link?.category || "Links Úteis");
+  const [category, setCategory] = useState(link?.category || categories[0] || "Outros");
   const [showIconPicker, setShowIconPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -225,6 +249,17 @@ function LinkForm({
   const handleSelectIcon = (value: string) => {
     setIcon(value);
     setShowIconPicker(false);
+  };
+
+  const getIconLabel = (): string => {
+    if (!icon) return "Selecionar ícone...";
+    const emoji = EMOJI_ICONS.find((e) => e.value === icon);
+    if (emoji) return emoji.name;
+    const local = LOCAL_ICONS.find((i) => i.path === icon);
+    if (local) return local.name;
+    const custom = customIcons.find((i) => i.url === icon);
+    if (custom) return custom.name;
+    return icon;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -267,18 +302,27 @@ function LinkForm({
           required
           className="px-3 py-2 rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm"
         />
-        <input
-          type="text"
+      </div>
+
+      {/* Dropdown de Categoria */}
+      <div>
+        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+          Categoria
+        </label>
+        <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          placeholder="Categoria"
-          className="px-3 py-2 rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm"
-        />
+          className="w-full px-3 py-2.5 rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm"
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
       </div>
 
       {/* Seletor de Ícone */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-[var(--text-secondary)]">
+      <div>
+        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
           Ícone
         </label>
         <div className="relative" ref={pickerRef}>
@@ -295,13 +339,7 @@ function LinkForm({
               )}
             </div>
             <span className="flex-1 text-[var(--text-primary)] truncate">
-              {icon
-                ? icon.startsWith("/icones/")
-                  ? LOCAL_ICONS.find((i) => i.path === icon)?.name || icon
-                  : icon.startsWith("http")
-                    ? customIcons.find((i) => i.url === icon)?.name || "Ícone customizado"
-                    : icon
-                : "Selecionar ícone..."}
+              {getIconLabel()}
             </span>
             <svg
               className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${showIconPicker ? "rotate-180" : ""}`}
@@ -314,20 +352,29 @@ function LinkForm({
           </button>
 
           {showIconPicker && (
-            <div className="absolute z-50 mt-1 w-full max-h-72 overflow-y-auto rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)] shadow-xl">
-              {/* Opção: Sem ícone */}
-              <button
-                type="button"
-                onClick={() => handleSelectIcon("")}
-                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-[var(--bg-secondary)] transition-colors text-sm"
-              >
-                <span className="w-7 h-7 flex items-center justify-center text-lg">🔗</span>
-                <span className="text-[var(--text-secondary)]">Sem ícone (padrão)</span>
-              </button>
-
-              {/* Seção: Ícones Locais */}
+            <div className="absolute z-50 mt-1 w-full max-h-80 overflow-y-auto rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)] shadow-xl">
+              {/* Emojis */}
               <div className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg-secondary)]">
-                Ícones do Sistema
+                Emojis
+              </div>
+              {EMOJI_ICONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => handleSelectIcon(item.value)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-[var(--bg-secondary)] transition-colors text-sm ${
+                    icon === item.value ? "bg-primary-50 dark:bg-primary-900/20" : ""
+                  }`}
+                >
+                  <span className="w-7 h-7 flex items-center justify-center text-lg">{item.value}</span>
+                  <span className="text-[var(--text-primary)]">{item.name}</span>
+                  {icon === item.value && <Check />}
+                </button>
+              ))}
+
+              {/* Ícones Locais */}
+              <div className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg-secondary)]">
+                Ícones do Repositório
               </div>
               {LOCAL_ICONS.map((item) => (
                 <button
@@ -338,21 +385,13 @@ function LinkForm({
                     icon === item.path ? "bg-primary-50 dark:bg-primary-900/20" : ""
                   }`}
                 >
-                  <img
-                    src={item.path}
-                    alt={item.name}
-                    className="w-7 h-7 rounded object-contain"
-                  />
+                  <img src={item.path} alt={item.name} className="w-7 h-7 rounded object-contain" />
                   <span className="text-[var(--text-primary)]">{item.name}</span>
-                  {icon === item.path && (
-                    <svg className="w-4 h-4 ml-auto text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                  {icon === item.path && <Check />}
                 </button>
               ))}
 
-              {/* Seção: Ícones do JSON (customizados pelo usuário) */}
+              {/* Ícones do JSON */}
               {customIcons.length > 0 && (
                 <>
                   <div className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg-secondary)]">
@@ -367,47 +406,13 @@ function LinkForm({
                         icon === item.url ? "bg-primary-50 dark:bg-primary-900/20" : ""
                       }`}
                     >
-                      <img
-                        src={item.url}
-                        alt={item.name}
-                        className="w-7 h-7 rounded object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).src = ""; }}
-                      />
+                      <img src={item.url} alt={item.name} className="w-7 h-7 rounded object-contain" />
                       <span className="text-[var(--text-primary)]">{item.name}</span>
-                      {icon === item.url && (
-                        <svg className="w-4 h-4 ml-auto text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
+                      {icon === item.url && <Check />}
                     </button>
                   ))}
                 </>
               )}
-
-              {/* Seção: Digitar manualmente */}
-              <div className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg-secondary)]">
-                Digitar URL ou Font Awesome
-              </div>
-              <div className="p-2">
-                <input
-                  type="text"
-                  placeholder="fa-code, https://... ou deixe vazio"
-                  defaultValue={icon.startsWith("/icones/") ? "" : icon}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleSelectIcon((e.target as HTMLInputElement).value);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (e.target.value) handleSelectIcon(e.target.value);
-                  }}
-                  className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-secondary)]"
-                />
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  Pressione Enter para confirmar
-                </p>
-              </div>
             </div>
           )}
         </div>
@@ -429,5 +434,13 @@ function LinkForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function Check() {
+  return (
+    <svg className="w-4 h-4 ml-auto text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+    </svg>
   );
 }

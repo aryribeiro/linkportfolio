@@ -28,7 +28,7 @@ export async function fetchAppData(): Promise<AppData> {
       profile: {
         name: raw.profile?.name || "Seu Nome",
         description: raw.profile?.description || "",
-        image: raw.profile?.image || null,
+        photo: raw.profile?.photo || "/foto/foto_perfil.jpg",
       },
       links: Array.isArray(raw.links)
         ? raw.links.map((link: Record<string, unknown>) => ({
@@ -39,6 +39,9 @@ export async function fetchAppData(): Promise<AppData> {
             category: link.category || "Outros",
             clicks: link.clicks || 0,
           }))
+        : [],
+      categories: Array.isArray(raw.categories)
+        ? raw.categories
         : [],
       customIcons: Array.isArray(raw.customIcons)
         ? raw.customIcons.map((icon: Record<string, unknown>) => ({

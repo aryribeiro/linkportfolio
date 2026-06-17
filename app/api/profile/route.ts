@@ -8,7 +8,7 @@ import { z } from "zod";
 const profileSchema = z.object({
   name: z.string().min(1),
   description: z.string(),
-  image: z.string().nullable(),
+  photo: z.string().min(1),
 });
 
 function getToken(request: NextRequest): string | null {

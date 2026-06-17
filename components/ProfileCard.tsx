@@ -8,10 +8,6 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ profile }: ProfileCardProps) {
-  const imageUrl = profile.image
-    ? `data:image/png;base64,${profile.image}`
-    : null;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,17 +16,11 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       className="flex flex-col sm:flex-row items-center gap-5 mb-10"
     >
       <div className="flex-shrink-0">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={`Foto de ${profile.name}`}
-            className="w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover border-4 border-[var(--border-color)] shadow-lg"
-          />
-        ) : (
-          <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-[var(--bg-secondary)] border-4 border-[var(--border-color)] flex items-center justify-center">
-            <span className="text-5xl">👤</span>
-          </div>
-        )}
+        <img
+          src={profile.photo}
+          alt={`Foto de ${profile.name}`}
+          className="w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover border-4 border-[var(--border-color)] shadow-lg"
+        />
       </div>
       <div className="text-center sm:text-left">
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">

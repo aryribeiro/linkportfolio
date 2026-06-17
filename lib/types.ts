@@ -10,7 +10,7 @@ export interface Link {
 export interface Profile {
   name: string;
   description: string;
-  image: string | null;
+  photo: string;
 }
 
 export interface CustomIcon {
@@ -21,6 +21,7 @@ export interface CustomIcon {
 export interface AppData {
   profile: Profile;
   links: Link[];
+  categories?: string[];
   customIcons?: CustomIcon[];
 }
 

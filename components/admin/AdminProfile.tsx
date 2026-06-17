@@ -1,57 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Profile } from "@/lib/types";
+
+const PROFILE_PHOTOS = [
+  { name: "Foto Principal", path: "/foto/foto_perfil.jpg" },
+];
 
 interface AdminProfileProps {
   profile: Profile;
+  photos?: string[];
   onUpdate: (profile: Profile) => Promise<boolean>;
 }
 
-export function AdminProfile({ profile, onUpdate }: AdminProfileProps) {
+export function AdminProfile({ profile, photos = [], onUpdate }: AdminProfileProps) {
   const [name, setName] = useState(profile.name);
   const [description, setDescription] = useState(profile.description);
-  const [image, setImage] = useState<string | null>(profile.image);
+  const [photo, setPhoto] = useState(profile.photo);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const pickerRef = useRef<HTMLDivElement>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const allPhotos = [
+    ...PROFILE_PHOTOS,
+    ...photos.filter((p) => !PROFILE_PHOTOS.some((pp) => pp.path === p)).map((p) => ({
+      name: p.split("/").pop()?.replace(/\.[^.]+$/, "") || p,
+      path: p,
+    })),
+  ];
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxSize = 300;
-        canvas.width = maxSize;
-        canvas.height = maxSize;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          const size = Math.min(img.width, img.height);
-          const sx = (img.width - size) / 2;
-          const sy = (img.height - size) / 2;
-          ctx.drawImage(img, sx, sy, size, size, 0, 0, maxSize, maxSize);
-          const base64 = canvas.toDataURL("image/png").split(",")[1];
-          setImage(base64);
-        }
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPhotoPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const ok = await onUpdate({ name, description, image });
+    const ok = await onUpdate({ name, description, photo });
     setMessage(ok ? "Perfil atualizado!" : "Erro ao atualizar.");
     setSaving(false);
     setTimeout(() => setMessage(""), 3000);
   };
-
-  const imageUrl = image ? `data:image/png;base64,${image}` : null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
@@ -59,28 +55,63 @@ export function AdminProfile({ profile, onUpdate }: AdminProfileProps) {
         Editar Perfil
       </h2>
 
-      <div className="flex items-center gap-4">
-        {imageUrl ? (
+      {/* Seletor de Foto */}
+      <div>
+        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+          Foto de Perfil
+        </label>
+        <div className="flex items-center gap-4">
           <img
-            src={imageUrl}
+            src={photo}
             alt="Perfil"
             className="w-24 h-24 rounded-full object-cover border-2 border-[var(--border-color)]"
           />
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] flex items-center justify-center text-3xl">
-            👤
+          <div className="relative flex-1" ref={pickerRef}>
+            <button
+              type="button"
+              onClick={() => setShowPhotoPicker(!showPhotoPicker)}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)] text-sm hover:border-primary-400 transition-colors"
+            >
+              <span className="flex-1 text-[var(--text-primary)] text-left truncate">
+                {allPhotos.find((p) => p.path === photo)?.name || photo.split("/").pop()}
+              </span>
+              <svg
+                className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${showPhotoPicker ? "rotate-180" : ""}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showPhotoPicker && (
+              <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)] shadow-xl">
+                <div className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg-secondary)]">
+                  Fotos disponíveis (/public/foto/)
+                </div>
+                {allPhotos.map((item) => (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => { setPhoto(item.path); setShowPhotoPicker(false); }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-[var(--bg-secondary)] transition-colors text-sm ${
+                      photo === item.path ? "bg-primary-50 dark:bg-primary-900/20" : ""
+                    }`}
+                  >
+                    <img src={item.path} alt={item.name} className="w-10 h-10 rounded-full object-cover" />
+                    <span className="text-[var(--text-primary)]">{item.name}</span>
+                    {photo === item.path && (
+                      <svg className="w-4 h-4 ml-auto text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+                <p className="px-3 py-2 text-xs text-[var(--text-secondary)]">
+                  Para adicionar mais fotos, coloque-as na pasta <code>public/foto/</code> do repositório.
+                </p>
+              </div>
+            )}
           </div>
-        )}
-        <div>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={handleImageUpload}
-            className="text-sm text-[var(--text-secondary)] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/20 dark:file:text-primary-300"
-          />
-          <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Recomendado: 300x300px
-          </p>
         </div>
       </div>
 
