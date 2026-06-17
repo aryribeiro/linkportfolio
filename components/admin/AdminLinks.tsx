@@ -121,6 +121,10 @@ export function AdminLinks({ links, customIcons = [], categories = [], onUpdate 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    setLocalLinks(links);
+  }, [links]);
+
   const allCategories = [...new Set([...DEFAULT_CATEGORIES, ...categories])];
 
   const sensors = useSensors(

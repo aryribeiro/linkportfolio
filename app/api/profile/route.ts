@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchAppData } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 import { getCache } from "@/lib/cache";
 import { AppData } from "@/lib/types";
 import { z } from "zod";
 
-const profileSchema = z.object({
-  name: z.string().min(1),
-  description: z.string(),
-  photo: z.string().min(1),
+const profileUpdateSchema = z.object({
+  profile: z.object({
+    name: z.string().min(1),
+    description: z.string(),
+    photo: z.string().min(1),
+  }),
+  links: z.array(z.object({
+    id: z.number(),
+    title: z.string().min(1),
+    url: z.string().min(1),
+    icon: z.string(),
+    category: z.string().min(1),
+    clicks: z.number().optional(),
+  })).optional(),
+  categories: z.array(z.string()).optional(),
+  customIcons: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+  })).optional(),
 });
 
 function getToken(request: NextRequest): string | null {
@@ -24,7 +38,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const parsed = profileSchema.safeParse(body);
+    const parsed = profileUpdateSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -33,13 +47,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const currentData = await fetchAppData();
-    currentData.profile = parsed.data;
+    const appData: AppData = {
+      profile: parsed.data.profile,
+      links: parsed.data.links || [],
+      categories: parsed.data.categories || [],
+      customIcons: parsed.data.customIcons || [],
+    };
 
     const cache = getCache<AppData>();
-    cache.set(currentData, true);
+    cache.set(appData, true);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: appData });
   } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }

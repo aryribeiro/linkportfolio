@@ -26,11 +26,16 @@ export default function AdminPage() {
       if (res.ok) {
         const appData = await res.json();
         setData(appData);
+        localStorage.setItem("linkportfolio_data", JSON.stringify(appData));
       } else if (res.status === 401) {
         router.push("/admin/login");
+      } else {
+        const cached = localStorage.getItem("linkportfolio_data");
+        if (cached) setData(JSON.parse(cached));
       }
     } catch {
-      // Network error
+      const cached = localStorage.getItem("linkportfolio_data");
+      if (cached) setData(JSON.parse(cached));
     } finally {
       setLoading(false);
     }
@@ -42,25 +47,45 @@ export default function AdminPage() {
   };
 
   const handleProfileUpdate = async (profile: Profile) => {
+    const payload = {
+      profile,
+      links: data?.links || [],
+      categories: data?.categories || [],
+      customIcons: data?.customIcons || [],
+    };
     const res = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
-      await fetchData();
+      const result = await res.json();
+      if (result.data) {
+        setData(result.data);
+        localStorage.setItem("linkportfolio_data", JSON.stringify(result.data));
+      }
     }
     return res.ok;
   };
 
   const handleLinksUpdate = async (links: Link[]) => {
+    const payload = {
+      links,
+      profile: data?.profile,
+      categories: data?.categories || [],
+      customIcons: data?.customIcons || [],
+    };
     const res = await fetch("/api/links", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ links }),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
-      await fetchData();
+      const result = await res.json();
+      if (result.data) {
+        setData(result.data);
+        localStorage.setItem("linkportfolio_data", JSON.stringify(result.data));
+      }
     }
     return res.ok;
   };

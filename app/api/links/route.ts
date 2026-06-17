@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchAppData } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
+import { getCache } from "@/lib/cache";
+import { AppData } from "@/lib/types";
 import { z } from "zod";
 
 const linkSchema = z.object({
@@ -14,6 +16,16 @@ const linkSchema = z.object({
 
 const updateSchema = z.object({
   links: z.array(linkSchema),
+  profile: z.object({
+    name: z.string().min(1),
+    description: z.string(),
+    photo: z.string().min(1),
+  }).optional(),
+  categories: z.array(z.string()).optional(),
+  customIcons: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+  })).optional(),
 });
 
 function getToken(request: NextRequest): string | null {
@@ -48,14 +60,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const currentData = await fetchAppData();
-    currentData.links = parsed.data.links;
+    const appData: AppData = {
+      profile: parsed.data.profile || { name: "", description: "", photo: "/foto/foto_perfil.jpg" },
+      links: parsed.data.links,
+      categories: parsed.data.categories || [],
+      customIcons: parsed.data.customIcons || [],
+    };
 
-    const { getCache } = await import("@/lib/cache");
-    const cache = getCache();
-    cache.set(currentData, true);
+    const cache = getCache<AppData>();
+    cache.set(appData, true);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: appData });
   } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
