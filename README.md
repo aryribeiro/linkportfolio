@@ -141,7 +141,7 @@ Clique em **Deploy**. Pronto.
 
 ### Acessar o painel admin
 
-Navegue para `https://seu-site.vercel.app/admin/login` e entre com a senha definida em `ADMIN_PASSWORD`.
+Clique no ícone de **engrenagem** (⚙) no canto superior direito da página pública — ele redireciona para a tela de login. Entre com a senha definida em `ADMIN_PASSWORD`.
 
 ### Gerenciar links
 

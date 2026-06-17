@@ -42,6 +42,7 @@ export default async function HomePage() {
       <div className="fixed top-4 right-4 z-50 flex gap-2">
         <ThemeToggle />
         <ShareButton />
+        <AdminButton />
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pt-12">
@@ -66,7 +67,6 @@ export default async function HomePage() {
         )}
       </div>
 
-      <AdminButton />
       <Footer />
     </main>
   );
