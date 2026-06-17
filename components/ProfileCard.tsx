@@ -23,7 +23,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         />
       </div>
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#1a2e4a] dark:text-[#5b9bd5]">
           {profile.name}
         </h1>
         <p className="text-[var(--text-secondary)] mt-2 max-w-md leading-relaxed text-sm sm:text-base">
