@@ -51,8 +51,8 @@ export function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Buscar links..."
-          aria-label="Buscar links"
+          placeholder="Buscar..."
+          aria-label="Buscar"
           className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)]
                      text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
