@@ -132,7 +132,7 @@ No painel da Vercel, em **Settings → Environment Variables**, adicione:
 | `ADMIN_PASSWORD` | Sim | Senha do painel admin (texto puro, hash gerado em runtime) |
 | `GOOGLE_DRIVE_JSON_URL` | Sim | URL direta do JSON no Google Drive |
 | `JWT_SECRET` | Sim | String aleatória com 32+ caracteres |
-| `CACHE_TTL_SECONDS` | Não | Tempo do cache em segundos (padrão: 300 = 5 min) |
+| `CACHE_TTL_SECONDS` | Não | Tempo do cache em segundos (padrão: 60 = 1 min) |
 | `NEXT_PUBLIC_SITE_URL` | Não | URL pública do site (para QR Code) |
 
 **Gerar JWT_SECRET pelo terminal:**
@@ -167,14 +167,22 @@ Clique no ícone de **engrenagem** (⚙) no canto superior direito da página p�
 2. Altere nome e descrição
 3. Clique em **Salvar Perfil**
 
-### Exportar / Backup
+### Persistir alterações (importante!)
 
-- Clique em **⬇ Download JSON** para baixar todas as configurações atuais
-- Faça upload desse arquivo no Google Drive para persistir as alterações permanentemente
+As edições feitas no painel admin ficam em cache temporário no servidor (TTL de 60 segundos). Para que as alterações sejam **permanentes**, siga este fluxo:
+
+1. Faça todas as edições no painel (adicionar/remover links, reordenar, editar perfil)
+2. Clique em **⬇ Download JSON** para exportar o arquivo atualizado
+3. Substitua o arquivo `links_data.json` no Google Drive pelo novo exportado
+4. Clique em **⟳ Reload Drive** para confirmar que o app está servindo os dados corretos
+
+> Sem esse fluxo, as alterações desaparecem após o cache expirar (60s) ou após novo deploy.
 
 ### Recarregar dados do Google Drive
 
-- Clique em **⟳ Reload Drive** para forçar o recarregamento do JSON (útil após editar o arquivo diretamente no Drive)
+- Clique em **⟳ Reload Drive** para forçar a busca dos dados diretamente do Google Drive
+- Útil após editar/substituir o JSON no Drive manualmente
+- Os dados são retornados imediatamente (não depende de cache)
 
 ### Compartilhar
 
